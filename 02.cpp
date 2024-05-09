@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-typedef enum { RED, GREEN, BLUE } Colors;
-
 int Part1(std::string line) {
 	int gameNumber = 0;
 	int iter = 0;
@@ -67,62 +65,41 @@ int Part1(std::string line) {
 }
 
 int Part2(std::string line) {
-	int gameNumber = 0;
-	int iter = 0;
-
-	while (!std::isdigit(line[iter]) && iter < line.size()) {
-		iter++;
-	}
-
-	while (std::isdigit(line[iter]) && iter < line.size()) {
-		gameNumber *= 10;
-		gameNumber += line[iter] - '0';
-		iter++;
-	}
-
-	iter += 2;
-
-	std::string games = line.substr(iter, line.size());
-
-	std::vector<std::string> gameList;
-
-	size_t pos;
-	while ((pos = games.find("; ")) != std::string::npos) {
-		gameList.push_back(games.substr(0, pos));
-		games.erase(0, pos + 2);
-	}
-	gameList.push_back(games);
-
+	int i = 0;
+	int tmpNumber = 0;
 	int r = 0;
 	int g = 0;
 	int b = 0;
 
-	for (auto i : gameList) {
-		std::vector<std::string> tmp;
-		size_t pos;
-		while ((pos = i.find(", ")) != std::string::npos) {
-			tmp.push_back(i.substr(0, pos));
-			i.erase(0, pos + 2);
-		}
-		tmp.push_back(i);
+	// Advance to first number
+	while (line[i] != ':') {
+		++i;
+	}
 
-		for (auto j : tmp) {
-			int numCubes = 0;
-			int it = 0;
-			while (std::isdigit(j[it])) {
-				numCubes *= 10;
-				numCubes += j[it] - '0';
-				it++;
+	for (; i < line.size(); ++i) {
+		if (std::isdigit(line[i])) {
+			// Add to temp number
+			tmpNumber *= 10;
+			tmpNumber += line[i] - '0';
+		} else {
+			++i;  // Skip over the space
+
+			// Set number if bigger
+			if (line[i] == 'r' && tmpNumber > r) {
+				r = tmpNumber;
+			} else if (line[i] == 'g' && tmpNumber > g) {
+				g = tmpNumber;
+			} else if (line[i] == 'b' && tmpNumber > b) {
+				b = tmpNumber;
 			}
 
-			// 12 red cubes, 13 green cubes, and 14 blue cubes
-			if (j[it + 1] == 'r') {
-				if (numCubes > r) r = numCubes;
-			} else if (j[it + 1] == 'g') {
-				if (numCubes > g) g = numCubes;
-			} else if (j[it + 1] == 'b') {
-				if (numCubes > b) b = numCubes;
+			tmpNumber = 0;
+
+			// Advance to next number
+			while (!std::isdigit(line[i]) && i < line.size()) {
+				++i;
 			}
+			--i;
 		}
 	}
 
@@ -150,7 +127,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	std::cout << "[Part 1] Sum of games possible: " << sum1 << std::endl;
-	std::cout << "[Part 1] Sum of power of games: " << sum2 << std::endl;
+	std::cout << "[Part 2] Sum of power of games: " << sum2 << std::endl;
 
 	return 0;
 }
