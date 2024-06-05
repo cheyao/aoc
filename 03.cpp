@@ -53,6 +53,7 @@ void part1() {
 			*tmp = 0;
 		}
 	}
+	delete tmp;
 
 	std::vector<int*> found;
 	int sum = 0;
@@ -102,7 +103,17 @@ void part1() {
 	}
 
 	std::cout << "The sum of part 1 is: " << sum << std::endl;
-	// LOL memeory leaks!
+
+	// be nice and free memory UwU
+	std::vector<int*> freed;
+	for (auto& [key, var] : number_map) {
+		if (std::find(freed.begin(), freed.end(), var) != freed.end()) {
+			continue;
+		}
+
+		freed.push_back(var);
+		delete var;
+	}
 }
 
 int main() {
