@@ -25,8 +25,6 @@ int64_t next(vector<int64_t> numbers) {
 		}
 	}
 
-	cout << out << endl;
-
 	return out;
 }
 
@@ -46,6 +44,22 @@ void part1() {
 	cout << "Part1: " << sum << endl;
 }
 
+void part2() {
+	ifstream file("09.input");
+	string line;
+	int64_t sum = 0;
+	while (1) {
+		getline(file, line);
+		if (file.eof()) {
+			break;
+		}
+		auto i = line | std::views::split( " "sv) | views::transform([](auto str)->int64_t{return atol(str.data());}) | ranges::to<vector<int64_t>>();
+		sum += next(vector(i.rbegin(), i.rend()));
+	}
+
+	cout << "Part2: " << sum << endl;
+}
+
 int main() {
 	auto t1 = chrono::high_resolution_clock::now();
 	part1();
@@ -53,4 +67,5 @@ int main() {
 	auto ms =
 	    (double)duration_cast<chrono::microseconds>(t2 - t1).count() / 1000;
 	cout << ms << endl;
+	part2();
 }
