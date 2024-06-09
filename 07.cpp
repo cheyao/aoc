@@ -14,6 +14,7 @@
 std::vector<std::tuple<std::string, std::string, std::uint64_t>> hands;
 
 int main() {
+	// Ooo one liner
 	std::ifstream file("07.input");
 	while (1) {
 		std::string line;
