@@ -1,5 +1,8 @@
+#include <algorithm>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -94,8 +97,10 @@ Vector2 after(Vector2 start, Vector2 pipe) {
 	}
 }
 
+vector<Vector2> walked;
+
 void part1() {
-	ifstream file("10.input.small");
+	ifstream file("10.input");
 	int y = 0;
 
 	Vector2 start = {-1, -1};
@@ -143,8 +148,9 @@ void part1() {
 	int c = 0;
 	Vector2 currentPos = start;
 	Vector2 nextPos = pos;
+	walked.emplace_back(currentPos);
+	walked.emplace_back(nextPos);
 	while (pipeMap[nextPos.y][nextPos.x] != 'S') {
-		cout << nextPos.x << ":" << nextPos.y << endl;
 		c++;
 		Vector2 nextOffset = after(currentPos, nextPos);
 		if (nextOffset == ZERO) {
@@ -153,9 +159,71 @@ void part1() {
 		}
 		currentPos = nextPos;
 		nextPos = nextOffset;
+		walked.emplace_back(nextPos);
 	}
 
 	cout << "We used " << c/2+1 << " steps" << endl;
 }
 
-int main() { part1(); }
+void part2() {
+	ifstream fileS("10.input.small");
+	vector<string> file;
+	while (1) {
+		string s;
+		getline(fileS, s);
+		if (fileS.eof()) {
+			break;
+		}
+		file.emplace_back(s);
+	}
+
+	for (auto vec : walked) {
+		char r = 'B';
+		switch (file[vec.y][vec.x]) {
+			case '|': r = 'A'; break;
+
+			case 'F': r = 'B'; break;
+			case 'J': r = 'B'; break;
+
+			case '7': r = 'C'; break;
+			case 'L': r = 'C'; break;
+
+			case '-': r = 'D'; break;
+		}
+		file[vec.y][vec.x] = r;
+	}
+
+	int count = 0;
+	int l = 0;
+	vector<string> out;
+	for (auto line : file) {
+		out.emplace_back(line);
+		int numPipe;
+		int numFJ;
+		int num7L;
+		string cp = line;
+
+		for (int i = 0; i < line.size(); i++) {	
+			string s = cp.substr(0, i + 1);
+			numPipe = std::count(s.begin(), s.end(), 'A');
+			numFJ = std::count(s.begin(), s.end(), 'B');
+			num7L = std::count(s.begin(), s.end(), 'C');
+
+			char cur = cp[i];
+			if (cur != 'A' && cur !='B' && cur != 'C' && cur != 'D' && 
+					(numPipe + numFJ/2 - num7L/2) % 2 != 0) {
+				count++;
+				out[l][i] = '!';
+			}
+		}
+		l++;
+	}
+
+	for (auto str : out) {
+		cout << str << endl;
+	}
+
+	cout << count << endl;
+}
+
+int main() { part1(); part2(); }
