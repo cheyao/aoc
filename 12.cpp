@@ -15,7 +15,7 @@
 using namespace std;
 using std::operator""sv;
 
-map<pair<string, vector<uint64_t>>, uint64_t> cache;
+map<tuple<string, vector<uint64_t>, uint64_t>, uint64_t> cache;
 
 // Call: ???.### 1,1,3--\
 //    1: .??.### 1,1,3  #??.### 1,1,3
@@ -33,8 +33,8 @@ uint64_t recursion(string s, vector<uint64_t> rows, uint64_t ammount = 0) {
 		}
 	}
 
-	if (cache.contains({s, rows})) {
-		return cache[{s, rows}];
+	if (cache.contains({s, rows, ammount})) {
+		return cache[{s, rows, ammount}];
 	} 
 
 	// Isn't in cache ^n^
@@ -45,7 +45,8 @@ uint64_t recursion(string s, vector<uint64_t> rows, uint64_t ammount = 0) {
 		sum += recursion(s, rows, ammount);
 		s[0] = '.';
 		sum += recursion(s, rows, ammount);
-		cache[{s, rows}] = sum;
+		s[0] = '?';
+		cache[{s, rows, ammount}] = sum;
 		return sum;
 	} 
 
@@ -110,7 +111,7 @@ void part1() {
 }
 
 void part2() {
-	ifstream file("12.input.small");
+	ifstream file("12.input");
 	vector<pair<string, vector<uint64_t>>> springMap;
 
 	while(1) {
@@ -132,11 +133,10 @@ void part2() {
 		springMap.emplace_back((pair<string, vector<uint64_t>>) {a+"?"+a+"?"+a+"?"+a+"?"+a, out});
 	}
 
-	// Brute force our way through
 	uint64_t sum = 0;
 	for (auto springRow : springMap) {
 		cache.clear();
-		// sum += posibility(springRow);
+		sum += posibility(springRow);
 	}
 
 	cout << "Day 12 part 2: " << sum << endl;
@@ -159,7 +159,7 @@ int main() {
 	std::cout << chrono::duration_cast<chrono::nanoseconds>(end-begin).count() << "ns" << std::endl;
 
 	auto begin2 = chrono::high_resolution_clock::now();
-	// part2();
+	part2();
 	auto end2 = chrono::high_resolution_clock::now();
 	std::cout << chrono::duration_cast<chrono::nanoseconds>(end2-begin2).count() << "ns" << std::endl;
 }
