@@ -40,9 +40,8 @@ uint64_t recursion(string s, vector<uint64_t> rows, uint64_t ammount = 0) {
 	// Isn't in cache ^n^
 	if (s[0] == '?') {
 		// Can be # and .
-		uint64_t sum = 0;
 		s[0] = '#';
-		sum += recursion(s, rows, ammount);
+		uint64_t sum = recursion(s, rows, ammount);
 		s[0] = '.';
 		sum += recursion(s, rows, ammount);
 		s[0] = '?';
@@ -51,7 +50,7 @@ uint64_t recursion(string s, vector<uint64_t> rows, uint64_t ammount = 0) {
 	} 
 
 	if (s[0] == '#') {
-		ammount++;
+		++ammount;
 		if (rows.empty() || ammount > rows.front()) {
 			return 0;
 		}
@@ -127,7 +126,7 @@ void part2() {
 		b = line | views::split(","sv) | views::transform([](auto s)->uint64_t{ return atol(s.data()); }) | ranges::to<vector<uint64_t>>();
 		vector<uint64_t> out;
 		out.reserve(b.size() * 5); // preallocate memory
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 5; ++i) {
 			out.insert(out.end(), b.begin(), b.end());
 		}
 		springMap.emplace_back((pair<string, vector<uint64_t>>) {a+"?"+a+"?"+a+"?"+a+"?"+a, out});
