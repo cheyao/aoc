@@ -1,20 +1,29 @@
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 #include <fstream>
 
 using namespace std;
 
-// O
-// O
-// .
-// O
-// .
-// O
-// .
-// .
-// #
-// #
+vector<string> rotate(vector<string>& matrix) {
+	vector<string> out;
+
+	for (auto& i : matrix[0]) {
+		out.emplace_back("");
+	}
+
+	for (auto line = matrix.rbegin(); line != matrix.rend(); ++line) {
+		for (int i = 0; i < out.size(); i++) {
+			out[i] += (*line)[i];
+		}
+	}
+
+	return out;
+}
+
 int count(vector<string> platform) {
 	int sum = 0;
 	for (int i = 0; i < platform.size(); ++i) {
@@ -43,6 +52,48 @@ void tilt(vector<string>& platform) {
 	}
 }
 
+map<vector<string>, vector<string>> cache;
+
+void cycle(vector<string>& platform) {
+	if (cache.contains(platform)) {
+		platform = cache[platform];
+	}
+
+	vector<string> old = platform;
+	tilt(platform);
+	platform = rotate(platform);
+	tilt(platform);
+	platform = rotate(platform);
+	tilt(platform);
+	platform = rotate(platform);
+	tilt(platform);
+	platform = rotate(platform);
+	cache[old] = platform;
+}
+
+void part2() {
+	ifstream file("14.input");
+	vector<string> platform;
+
+	while (1) {
+		string s;
+		getline(file, s);
+		if (file.eof()) {
+			break;
+		}
+		platform.emplace_back(s);
+	}
+
+
+	for (uint64_t i = 0; i < 1000; ++i) {
+		cycle(platform);
+	}
+
+	int load = count(platform);
+
+	cout << "Part 1: " << load << endl;
+}
+
 void part1() {
 	ifstream file("14.input");
 	vector<string> platform;
@@ -58,12 +109,6 @@ void part1() {
 
 	tilt(platform);
 
-	/*
-	for (auto l : platform) {
-		cout << l << endl;
-	}
-	*/
-
 	int load = count(platform);
 
 	cout << "Part 1: " << load << endl;
@@ -71,4 +116,5 @@ void part1() {
 
 int main() {
 	part1();
+	part2();
 }
