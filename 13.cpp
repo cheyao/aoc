@@ -159,6 +159,6 @@ void part1() {
 }
 
 int main() { 
-	// part1();
+	part1();
 	part2();
 }

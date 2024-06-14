@@ -1,4 +1,5 @@
 #include <Eigen/Dense>
+#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -151,6 +152,33 @@ void shoot(queue<Laser>& lasers, const vector<string>& layout, vector<vector<Foo
 	}
 }
 
+uint64_t calc(vector<string>& layout, Laser laser) {
+		vector<vector<Footprint>> footprints;
+		// Initialize footprints
+		for (int i = 0; i < layout.size(); ++i) {
+			footprints.emplace_back(vector<Footprint>());
+			for (int j = 0; j < layout[0].size(); j++) {
+				footprints.back().emplace_back(Footprint());
+			}
+		}
+
+		// Walked paths
+		queue<Laser> lasers;
+		lasers.push(laser);
+
+		shoot(lasers, layout, footprints);
+
+		int energized = 0;
+		for (auto line : footprints) {
+			for (auto footprint : line) {
+				if (footprint.val != 0) {
+					energized++;
+				}
+			}
+		}
+		return energized;
+}
+
 void part1() {
 	fstream file("16.input");
 	vector<string> layout;
@@ -187,17 +215,53 @@ void part1() {
 	for (auto line : footprints) {
 		for (auto footprint : line) {
 			if (footprint.val != 0) {
-				// cout << '#';
 				energized++;
-			} /* else {
-				cout << '.';
-			} */
+			}
 		}
 	}
 
 	cout << "Part 1: " << energized << endl;
 }
 
+void part2() {
+	fstream file("16.input");
+	vector<string> layout;
+
+	// Read the layout
+	while (1) {
+		string s;
+		getline(file, s);
+
+		if (file.eof()) {
+			break;
+		}
+
+		layout.emplace_back(s);
+	}
+
+	uint64_t m = 0;
+	// Horizontal
+	for (int i = 0; i < layout[0].size(); ++i) {
+		m = max(calc(layout, {{i, 0}, SOUTH}), m);
+		m = max(calc(layout, {{i, layout.size() - 1}, NORTH}), m);
+	}
+	// Vert
+	for (int i = 0; i < layout.size(); ++i) {
+		m = max(calc(layout, {{0, i}, EAST}), m);
+		m = max(calc(layout, {{layout[0].size() - 1, i}, WEST}), m);
+	}
+
+	cout << "Part 2: " << m << endl;
+}
+
 int main() {
-	part1();
+	auto begin = chrono::high_resolution_clock::now();
+	part1(); 
+	auto end = chrono::high_resolution_clock::now();
+	std::cout << "Part 1 took " << chrono::duration_cast<chrono::nanoseconds>(end-begin).count() << " ns" << std::endl;
+
+	auto begin2 = chrono::high_resolution_clock::now();
+	part2();
+	auto end2 = chrono::high_resolution_clock::now();
+	std::cout << "Part 2 took " << chrono::duration_cast<chrono::nanoseconds>(end2-begin2).count() << " ns" << std::endl;
 }
