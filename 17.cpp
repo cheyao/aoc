@@ -51,7 +51,7 @@ vector<string> maze;
 
 typedef struct Node {
 	Vector2 position;
-	vector<Node*> neighbors;
+	vector<Node> neighbors;
 
 	Vector2 direction;
 	int turns = 0;
@@ -100,6 +100,22 @@ typedef struct PriorityQueue {
 	}
 } PriorityQueue;
 
+static int64_t dirHash(const Vector2& dir) {
+	if (dir == UP) {
+		return 4;
+	}
+	if (dir == DOWN) {
+		return 3;
+	}
+	if (dir == LEFT) {
+		return 2;
+	}
+	if (dir == RIGHT) {
+		return 1;
+	}
+	return 0;
+}
+
 namespace std {
 template <> struct hash<Vector2> {
 	std::size_t operator()(const Vector2& id) const noexcept {
@@ -108,16 +124,16 @@ template <> struct hash<Vector2> {
 };
 template <> struct hash<Node> {
 	std::size_t operator()(const Node& id) const noexcept {
-		return std::hash<int>()(id.position.x ^ (id.position.y << 16));
+		return std::hash<int64_t>()((id.position.x ^ (id.position.y << 16)) ^ (dirHash(id.direction) << 32));
 	}
 };
 }
 
-static auto& get(vector<string>& vec, Vector2 pos) {
+static auto& get(vector<string>& vec, const Vector2& pos) {
 	return vec[pos.y][pos.x];
 }
 
-static uint64_t tileCost(const Vector2 pos) {
+static uint64_t tileCost(const Vector2& pos) {
 	return get(maze, pos) - '0';
 }
 
@@ -126,10 +142,12 @@ static Vector2 dir(const Node& neighbor, const Node& b) {
 }
 
 bool valid(const Node& neighbor, const Node& node) {
+	// No more then 3
 	if (node.turns == 3 && node.direction == dir(neighbor, node)) {
 		return false;
 	}
 
+	// No turning back
 	if (dir(neighbor, node) == -node.direction) {
 		return false;
 	}
@@ -140,10 +158,11 @@ bool valid(const Node& neighbor, const Node& node) {
 unordered_map<Node, Node> Dijkstra(vector<Node>& nodes, Node& start, Node& end) {
 	PriorityQueue frontier;
 	frontier.put(start, 1);
+
 	unordered_map<Node, Node> outPath;
 	outPath[start] = start;
 	unordered_map<Node, uint64_t> costs;
-	costs[start] = tileCost(start.position);
+	costs[start] = 0;
 
 	while (!frontier.empty()) {
 		auto node = frontier.get();
@@ -152,22 +171,23 @@ unordered_map<Node, Node> Dijkstra(vector<Node>& nodes, Node& start, Node& end) 
 			break;
 		}
 
-		for (Node* neighbor : node.neighbors) {
-			const uint64_t newCost = costs[node] + tileCost(neighbor->position);
+		for (Node neighbor : node.neighbors) {
+			const uint64_t newCost = costs[node] + tileCost(neighbor.position);
+			Node normalized = neighbor;
+			normalized.direction = ZERO;
+			neighbor.direction = dir(neighbor, node);
 
-			if ((!outPath.contains(*neighbor) || newCost < costs[*neighbor]) && valid(*neighbor, node)) {
-				cout << node << " to " << *neighbor << " with cost " << newCost << endl;
-				costs[*neighbor] = newCost;
-				outPath[*neighbor] = node;
-
-				neighbor->direction = dir(*neighbor, node);
-
-				if (neighbor->direction == node.direction) {
-					neighbor->turns = node.turns + 1;
+			if ((!outPath.contains(normalized) || newCost < costs[neighbor]) && valid(neighbor, node)) {
+				if (neighbor.direction == node.direction) {
+					neighbor.turns = node.turns + 1;
 				} else {
-					neighbor->turns = 1;
+					neighbor.turns = 1;
 				}
-				frontier.put(*neighbor, newCost);
+
+				outPath[neighbor] = node;
+				costs[neighbor] = newCost;
+
+				frontier.put(neighbor, newCost);
 			}
 		}
 	}
@@ -175,8 +195,8 @@ unordered_map<Node, Node> Dijkstra(vector<Node>& nodes, Node& start, Node& end) 
 	return outPath;
 }
 
-Node& findNode(vector<Node>& nodes, const Vector2& position) {
-	for (Node& node : nodes) {
+const Node& findNode(const vector<Node>& nodes, const Vector2& position) {
+	for (auto& node : nodes) {
 		if (node.position == position) {
 			return node;
 		}
@@ -185,13 +205,13 @@ Node& findNode(vector<Node>& nodes, const Vector2& position) {
 	return nodes[0];
 }
 
-void populate(Node& node, vector<Node>& nodes) {
-	for (const Vector2& vec : {RIGHT, UP, DOWN, LEFT}) {
+void populate(Node& node, const vector<Node>& nodes) {
+	for (const Vector2& vec : {RIGHT, DOWN, LEFT, UP}) {
 		if (!node.inside(maze, vec)) {
 			continue;
 		}
 
-		node.neighbors.push_back(&findNode(nodes, node.position + vec));
+		node.neighbors.push_back(findNode(nodes, node.position + vec));
 	}
 }
 
@@ -269,13 +289,27 @@ void part1() {
 	auto outPath = Dijkstra(nodes, start, end);
 	auto timeEnd = std::chrono::high_resolution_clock::now();
 
-#if 1
+	uint64_t sum = 0;
+
 	vector<string> maze1 = maze;
 	// Print out the results
 	cout << "Output:" << endl;
+	for (auto [a, b] : outPath) {
+		Node c = a;
+		cout << c << " to " << b << endl;
+	}
+
 	Node cur = end;
+	cur.direction = RIGHT;
+	if (!outPath.contains(cur)) {
+		cur.direction = DOWN;
+	}
+	if (!outPath.contains(cur)) {
+		exit(2);
+	}
 	while (cur != start) {
 		Node next = outPath[cur];
+		sum += get(maze, cur.position) - '0';
 		get(maze1, cur.position) = '.';
 		cur = next;
 	}
@@ -289,6 +323,7 @@ void part1() {
 		if (maze1[node.position.y][node.position.x] != '.') {
 			continue;
 		}
+
 		if (node.position == start.position) {
 			maze1[node.position.y][node.position.x] = 'S';
 		} else if (node.position == end.position) {
@@ -326,9 +361,9 @@ void part1() {
 		}
 		cout << endl;
 	}
-#endif
 
 	cout << "Part 1 took " << timeEnd-timeStart << "ns" << endl;
+	cout << "Sum of part 1: " << sum << endl;
 }
 
 int main() {
