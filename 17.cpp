@@ -6,6 +6,7 @@
 #include <queue>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -51,15 +52,16 @@ vector<string> maze;
 
 typedef struct Node {
 	Vector2 position;
-	vector<Node> neighbors;
+	Vector2 direction = ZERO;
 
-	Vector2 direction;
-	int turns = 0;
+	uint64_t turns = 0;
+	uint64_t loss = 0;
 
-	Node() : position(ZERO), neighbors(), direction(RIGHT) {};
-	Node(Vector2 pos) : position(pos), neighbors(), direction(RIGHT) {};
+	Node() : position(ZERO) {};
+	Node(Vector2 pos) : position(pos) {};
+	Node(Vector2 pos, Vector2 dir) : position(pos), direction(dir) {};
 
-	bool inside(vector<string>& maze, Vector2 offset = ZERO) {
+	bool inside(vector<string>& maze, Vector2 offset = ZERO) const {
 		return (
 				position.x + offset.x >= 0 &&
 				position.x + offset.x < maze[0].size() &&
@@ -69,7 +71,7 @@ typedef struct Node {
 	}
 
 	bool operator==(const Node& other) const {
-		return position == other.position;
+		return position == other.position && direction == other.direction;
 	}
 	bool operator!=(const Node& other) const {
 		return !(*this == other);
@@ -81,166 +83,85 @@ typedef struct Node {
 	}
 } Node;
 
-typedef struct PriorityQueue {
-	typedef std::pair<uint64_t, Node> Element;
-	std::priority_queue<Element, std::vector<Element>, decltype([] (const Element& a, const Element& b) { return a.first > b.first; })> elements;
-
-	inline bool empty() const {
-		return elements.empty();
+typedef struct NodeHash {
+	uint64_t operator()(const Node& node) const {
+		auto cantor = [](size_t a, size_t b){ return (a + b + 1) * (a + b) / 2 + b; };
+		return cantor(node.position.x, cantor(node.position.y, cantor(node.direction.x, cantor(node.direction.y, node.turns))));
 	}
-
-	inline void put(Node item, uint64_t priority) {
-		elements.emplace(priority, item);
-	}
-
-	Node get() {
-		Node best_item = elements.top().second;
-		elements.pop();
-		return best_item;
-	}
-} PriorityQueue;
-
-static int64_t dirHash(const Vector2& dir) {
-	if (dir == UP) {
-		return 4;
-	}
-	if (dir == DOWN) {
-		return 3;
-	}
-	if (dir == LEFT) {
-		return 2;
-	}
-	if (dir == RIGHT) {
-		return 1;
-	}
-	return 0;
-}
-
-namespace std {
-template <> struct hash<Vector2> {
-	std::size_t operator()(const Vector2& id) const noexcept {
-		return std::hash<int>()(id.x ^ (id.y << 16));
-	}
-};
-template <> struct hash<Node> {
-	std::size_t operator()(const Node& id) const noexcept {
-		return std::hash<int64_t>()((id.position.x ^ (id.position.y << 16)) ^ (dirHash(id.direction) << 32));
-	}
-};
-}
+} NodeHash;
 
 static auto& get(vector<string>& vec, const Vector2& pos) {
 	return vec[pos.y][pos.x];
 }
 
-static uint64_t tileCost(const Vector2& pos) {
-	return get(maze, pos) - '0';
-}
+const uint64_t Dijkstra(const Node& end) {
+	uint64_t sum;
+	priority_queue<Node, vector<Node>, decltype([](const Node& a, const Node& b) { return a.loss > b.loss; })> q;
+	unordered_set<Node, NodeHash> visited;
 
-static Vector2 dir(const Node& neighbor, const Node& b) {
-	return (neighbor.position - b.position);
-}
+	Node start;
+	start.turns = 0;
+	start.loss = 0;
+	start.direction = DOWN;
+	q.push(start);
+	start.direction = RIGHT;
+	q.push(start);
 
-bool valid(const Node& neighbor, const Node& node) {
-	// No more then 3
-	if (node.turns == 3 && node.direction == dir(neighbor, node)) {
-		return false;
-	}
+	while (!q.empty()) {
+		auto cur = q.top();
+		q.pop();
 
-	// No turning back
-	if (dir(neighbor, node) == -node.direction) {
-		return false;
-	}
-
-	return true;
-}
-
-unordered_map<Node, Node> Dijkstra(vector<Node>& nodes, Node& start, Node& end) {
-	PriorityQueue frontier;
-	frontier.put(start, 1);
-
-	unordered_map<Node, Node> outPath;
-	outPath[start] = start;
-	unordered_map<Node, uint64_t> costs;
-	costs[start] = 0;
-
-	while (!frontier.empty()) {
-		auto node = frontier.get();
-
-		if (node == end) {
-			break;
-		}
-
-		for (Node neighbor : node.neighbors) {
-			const uint64_t newCost = costs[node] + tileCost(neighbor.position);
-			Node normalized = neighbor;
-			normalized.direction = ZERO;
-			neighbor.direction = dir(neighbor, node);
-
-			if ((!outPath.contains(normalized) || newCost < costs[neighbor]) && valid(neighbor, node)) {
-				if (neighbor.direction == node.direction) {
-					neighbor.turns = node.turns + 1;
-				} else {
-					neighbor.turns = 1;
-				}
-
-				outPath[neighbor] = node;
-				costs[neighbor] = newCost;
-
-				frontier.put(neighbor, newCost);
-			}
-		}
-	}
-
-	return outPath;
-}
-
-const Node& findNode(const vector<Node>& nodes, const Vector2& position) {
-	for (auto& node : nodes) {
-		if (node.position == position) {
-			return node;
-		}
-	}
-
-	return nodes[0];
-}
-
-void populate(Node& node, const vector<Node>& nodes) {
-	for (const Vector2& vec : {RIGHT, DOWN, LEFT, UP}) {
-		if (!node.inside(maze, vec)) {
+		// Already visited
+		if (visited.contains(cur)) {
 			continue;
 		}
+		visited.insert(cur);
 
-		node.neighbors.push_back(findNode(nodes, node.position + vec));
+		if (cur.position == end.position) {
+			return cur.loss;
+		}
+
+		for (auto vec : (vector<Vector2>) {
+				UP,
+				DOWN,
+				LEFT,
+				RIGHT,
+				}) {
+			Node next;
+			next.direction = vec;
+			next.position = cur.position + vec;
+
+			if (next.direction == cur.direction) {
+				next.turns = cur.turns + 1;
+			} else {
+				next.turns = 1;
+			}
+
+			if (!next.inside(maze)) {
+				continue;
+			}
+
+			// No more then 3
+			if (next.turns > 3 && next.direction == cur.direction) {
+				continue;
+			}
+
+			// No turning back
+			if (next.direction == -cur.direction) {
+				continue;
+			}
+
+			next.loss = cur.loss + (get(maze, next.position) - '0');
+
+			q.push(next);
+		}
 	}
-}
 
-const char direction(const Node& node, const Node& direction) {
-	 static unordered_map<Vector2, char> dirMap = {
-		{UP, '^'}, 
-		{DOWN, 'v'},
-		{LEFT, '<'},
-		{RIGHT, '>'}
-	};
-	return dirMap[direction.position - node.position];
-}
-
-const string beutify(const char& c) {
-	 static unordered_map<char, string> charMap = {
-		 {'>', "→"},
-		 {'<', "←"},
-		 {'v', "↓"},
-		 {'^', "↑"},
-		 {'S', "\x1B[33m⛌\033[0m"},
-		 {'D', "\x1B[33m★\033[0m"},
-		 {' ', " "},
-		 {'.', " "}
-	};
-	return charMap.contains(c) ? charMap[c] : "\033[0m" + string(1, c) + "\033[0m";
+	return 0;
 }
 
 void getMap() {
-	ifstream file("17.input.small");
+	ifstream file("17.input");
 	while (1) {
 		string s;
 		getline(file, s);
@@ -256,111 +177,9 @@ void getMap() {
 void part1() {
 	getMap();
 
-	vector<Node> nodes;
-	Node start;
-	Node end;
-	for (int y = 0; y < maze.size(); ++y) {
-		for (int x = 0; x < maze[0].size(); ++x) {
-			Node node;
-			node.position = Vector2(x, y);
-			node.neighbors.clear();
-			node.turns = 0;
-			node.direction = ZERO;
-
-			nodes.push_back(node);
-
-			 if (y == 0 && x == 0) {
-				 start = node;
-			 }
-			 if (y == maze.size() - 1 && x == maze[0].size() - 1) {
-				 end = node;
-			 }
-		}
-	}
-
-	for (auto& node : nodes) {
-		populate(node, nodes);
-	}
-	populate(start, nodes);
-	start.direction = ZERO;
-	start.turns = 0;
-
-	auto timeStart = std::chrono::high_resolution_clock::now();
-	auto outPath = Dijkstra(nodes, start, end);
-	auto timeEnd = std::chrono::high_resolution_clock::now();
-
-	uint64_t sum = 0;
-
-	vector<string> maze1 = maze;
-	// Print out the results
-	cout << "Output:" << endl;
-	for (auto [a, b] : outPath) {
-		Node c = a;
-		cout << c << " to " << b << endl;
-	}
-
-	Node cur = end;
-	cur.direction = RIGHT;
-	if (!outPath.contains(cur)) {
-		cur.direction = DOWN;
-	}
-	if (!outPath.contains(cur)) {
-		exit(2);
-	}
-	while (cur != start) {
-		Node next = outPath[cur];
-		sum += get(maze, cur.position) - '0';
-		get(maze1, cur.position) = '.';
-		cur = next;
-	}
-	maze1[0][0] = 'S';
-	for (auto& line : maze1) {
-		cout << line << endl;
-	}
-
-	cout << "Path flow:" << endl;
-	for (auto [node, neighbor] : outPath) {
-		if (maze1[node.position.y][node.position.x] != '.') {
-			continue;
-		}
-
-		if (node.position == start.position) {
-			maze1[node.position.y][node.position.x] = 'S';
-		} else if (node.position == end.position) {
-			maze1[node.position.y][node.position.x] = 'D';
-		} else {
-			maze1[node.position.y][node.position.x] = direction(node, neighbor);
-		}
-	}
-	for (const auto& line : maze1) {
-		for (const auto& c : line) {
-			cout << "\x1B[32m" << beutify(c) << "\033[0m";
-		}
-		cout << endl;
-	}
-
-	Node cur2 = end;
-	while (cur2 != start) {
-		Node next = outPath[cur];
-		get(maze, cur.position) = '.';
-		cur2 = next;
-	}
-	cout << "Flow:" << endl;
-	for (auto [node, neighbor] : outPath) {
-		if (node.position == start.position) {
-			maze[node.position.y][node.position.x] = 'S';
-		} else if (node.position == end.position) {
-			maze[node.position.y][node.position.x] = 'D';
-		} else {
-			maze[node.position.y][node.position.x] = direction(node, neighbor);
-		}
-	}
-	for (const auto& line : maze) {
-		for (const auto& c : line) {
-			cout << "\x1B[32m" << beutify(c) << "\033[0m";
-		}
-		cout << endl;
-	}
+	const auto timeStart = std::chrono::high_resolution_clock::now();
+	const auto sum = Dijkstra(Vector2(maze[0].size() - 1, maze.size() - 1));
+	const auto timeEnd = std::chrono::high_resolution_clock::now();
 
 	cout << "Part 1 took " << timeEnd-timeStart << "ns" << endl;
 	cout << "Sum of part 1: " << sum << endl;
