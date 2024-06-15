@@ -5,7 +5,6 @@
 #include <ostream>
 #include <queue>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -18,6 +17,9 @@ typedef struct Vector2 {
 	Vector2(uint64_t _x, uint64_t _y) : x(_x), y(_y) {};
 	bool operator==(const Vector2& rhs) const {
 		return x == rhs.x && y == rhs.y;
+	}
+	bool operator!=(const Vector2& rhs) const {
+		return x != rhs.x && y != rhs.y;
 	}
 	bool operator<(const Vector2& rhs) const {
 		if (y != rhs.y) {
@@ -161,6 +163,7 @@ const uint64_t Dijkstra(const Node& end) {
 }
 
 void getMap() {
+	maze.clear();
 	ifstream file("17.input");
 	while (1) {
 		string s;
@@ -181,10 +184,88 @@ void part1() {
 	const auto sum = Dijkstra(Vector2(maze[0].size() - 1, maze.size() - 1));
 	const auto timeEnd = std::chrono::high_resolution_clock::now();
 
-	cout << "Part 1 took " << timeEnd-timeStart << "ns" << endl;
+	cout << "Part 1 took " << timeEnd-timeStart << endl;
 	cout << "Sum of part 1: " << sum << endl;
+}
+
+void part2() {
+	getMap();
+
+	const Node end(Vector2(maze[0].size() - 1, maze.size() - 1));
+
+	priority_queue<Node, vector<Node>, decltype([](const Node& a, const Node& b) { return a.loss > b.loss; })> q;
+	unordered_set<Node, NodeHash> visited;
+
+	Node start;
+	start.turns = 0;
+	start.loss = 0;
+	start.direction = DOWN;
+	q.push(start);
+	start.direction = RIGHT;
+	q.push(start);
+
+	while (!q.empty()) {
+		auto cur = q.top();
+		q.pop();
+
+		// Already visited
+		if (visited.contains(cur)) {
+			continue;
+		}
+		visited.insert(cur);
+
+		if (cur.position == end.position) {
+			if (cur.turns < 4) {
+				continue;
+			}
+
+			cout << "Part 2: " << cur.loss << endl;
+			return;
+		}
+
+		for (auto vec : (vector<Vector2>) {
+				UP,
+				DOWN,
+				LEFT,
+				RIGHT,
+				}) {
+			Node next;
+			next.direction = vec;
+			next.position = cur.position + vec;
+
+			if (next.direction == cur.direction) {
+				if (cur.turns >= 10) {
+					continue;
+				}
+
+				next.turns = cur.turns + 1;
+			} else {
+				if (cur.turns < 4) {
+					continue;
+				}
+
+				next.turns = 1;
+			}
+
+			if (!next.inside(maze)) {
+				continue;
+			}
+
+			// No turning back
+			if (next.direction == -cur.direction) {
+				continue;
+			}
+
+			next.loss = cur.loss + (get(maze, next.position) - '0');
+
+			q.push(next);
+		}
+	}
+
+	cout << "Error" << endl;
 }
 
 int main() {
 	part1();
+	part2();
 }
