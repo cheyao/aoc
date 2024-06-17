@@ -166,7 +166,7 @@ void part1() {
 }
 
 void part2() {
-	ifstream fileS("10.input.small");
+	ifstream fileS("10.input");
 	vector<string> file;
 	while (1) {
 		string s;
