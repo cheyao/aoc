@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <regex>
@@ -6,6 +7,8 @@
 #include <string>
 #include <unordered_map>
 #include <ranges>
+#include <utility>
+#include <vector>
 
 using namespace std;
 using std::operator""sv;
@@ -117,6 +120,95 @@ void part1() {
 	file.close();
 }
 
+typedef struct Function {
+	char gear;
+	char op;
+	uint64_t val;
+	string to;
+} Function;
+
+using Functions = unordered_map<string, vector<Function>>;
+using Gear = unordered_map<char, pair<int, int>>;
+
+[[nodiscard]] pair<Gear, Gear> split(Gear g, Function f) {
+
+}
+
+uint64_t rate(const Functions& functions){
+	uint64_t sum = 0;
+	vector<pair<string, Gear>> ratings = {{"in", {{'x', {1, 4001}},
+	 						  {'m', {1, 4001}},
+							  {'a', {1, 4001}},
+							  {'s', {1, 4001}}}}};
+
+	while (!ratings.empty()) {
+		auto [func, gear] = ratings.back();
+		ratings.pop_back();
+		
+		[[unlikely]] if (func == "R") {
+			continue; // Discard
+		}
+
+		[[unlikely]] if (func == "A") {
+			const auto vals = gear | views::values;
+			sum += ranges::fold_left(vals, 1, [] (const auto& last, const auto& num) { return last * (num.second - num.first); });
+			continue;
+		}
+
+		for (const auto& rule : functions.at(func)) {
+			[[unlikely]] if (rule.op == ' ') {
+				ratings.push_back({rule.to, gear});
+				break;
+			}
+
+			auto [thing, other] = split(gear, rule);
+			ratings.push_back({rule.to, thing});
+			gear = other;
+		}
+	}
+
+	return sum;
+}
+
+void part2() {
+	ifstream file("19.input");
+	Functions functions;
+	// Read functions
+	while (1) {
+		string line;
+		getline(file, line);
+		if (line.empty()) {
+			break;
+		}
+		const string title = line.substr(0, line.find('{'));
+		string func = line.substr(line.find('{') + 1, (line.find('}') - line.find('{') - 1));
+
+		vector<string> instructions = func | views::split(","sv) | ranges::to<vector<string>>();
+		string def = instructions.back();
+		instructions.pop_back();
+
+		for (auto inst : instructions) {
+			// Process the data
+			Function func;
+			func.gear = inst[0];
+			func.op = inst[1];
+			inst.erase(0, 2);
+			func.val = stoi(inst.substr(0, inst.find(':')));
+			inst.erase(0, inst.find(':') + 1);
+			func.to = inst;
+
+			functions[title].push_back(func);
+		}
+		
+		functions[title].push_back({.gear = ' ', .op = ' ', .val = 0, .to = def});
+	}
+
+	cout << "Part 2: " << rate(functions) << endl;
+
+	file.close();
+}
+
 int main() {
 	part1();
+	part2();
 }
