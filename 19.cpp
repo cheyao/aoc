@@ -128,10 +128,22 @@ typedef struct Function {
 } Function;
 
 using Functions = unordered_map<string, vector<Function>>;
-using Gear = unordered_map<char, pair<int, int>>;
+using Gear = unordered_map<char, pair<uint64_t, uint64_t>>;
 
 [[nodiscard]] pair<Gear, Gear> split(Gear g, Function f) {
+	Gear out = g;
+	if (f.op == '<') {
+		g[f.gear].second = min(g[f.gear].second, f.val);
+		out[f.gear].first = max(out[f.gear].first, f.val);
+		return (pair<Gear, Gear>) {g, out};
+	}
+	if (f.op == '>') {
+		g[f.gear].first = max(g[f.gear].first, f.val + 1);
+		out[f.gear].second = min(out[f.gear].second, f.val + 1);
+		return (pair<Gear, Gear>) {g, out};
+	}
 
+	unreachable();
 }
 
 uint64_t rate(const Functions& functions){
@@ -151,7 +163,7 @@ uint64_t rate(const Functions& functions){
 
 		[[unlikely]] if (func == "A") {
 			const auto vals = gear | views::values;
-			sum += ranges::fold_left(vals, 1, [] (const auto& last, const auto& num) { return last * (num.second - num.first); });
+			sum += ranges::fold_left(vals.begin(), vals.end(), 1, [] (const auto& last, const auto& num) { return last * (num.second - num.first); });
 			continue;
 		}
 
