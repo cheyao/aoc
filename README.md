@@ -3,6 +3,8 @@ AoC 2023 in c++
 
 Yay I am actually going through all the problems!
 
+3 days left!!!
+
 Usage:
 ```
 clang++ ${DAY} -o ${DAY}
