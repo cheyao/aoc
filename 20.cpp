@@ -1,9 +1,13 @@
+#include <algorithm>
+#include <bits/ranges_algo.h>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <ranges>
+#include <numeric>
 #include <queue>
+#include <ranges>
 #include <string>
+#include <sys/types.h>
 #include <unordered_map>
 #include <vector>
 
@@ -42,7 +46,7 @@ struct Pulse {
 };
 
 Circuit phrase() {
-	ifstream file("20.input.small");
+	ifstream file("20.input");
 
 	Circuit circuit;
 
@@ -53,9 +57,11 @@ Circuit phrase() {
 			break;
 		}
 
-		auto split = line | views::split(" -> "sv) | ranges::to<vector<string>>();
+		auto split = line | views::split(" -> "sv) |
+			     ranges::to<vector<string>>();
 		string name = split[0];
-		vector<string> destionations = split[1] | views::split(", "sv) | ranges::to<vector<string>>();
+		vector<string> destionations = split[1] | views::split(", "sv) |
+					       ranges::to<vector<string>>();
 
 		Gate gate;
 
@@ -72,7 +78,7 @@ Circuit phrase() {
 		gate.mOutIDs = destionations;
 
 		circuit[gate.id] = gate;
- 	}
+	}
 
 	// Initalize the outputs
 	for (const auto& [name, gate] : circuit) {
@@ -91,7 +97,7 @@ Circuit phrase() {
 			circuit[out].mIns.emplace_back(circuit[name]);
 		}
 	}
-	
+
 	return circuit;
 }
 
@@ -155,8 +161,39 @@ void part1() {
 			l += !pulse.level;
 		}
 	}
-	cout << "Part 1: " << l*h << endl;
+	cout << "Part 1: " << l * h << endl;
 }
 
-int main() { part1(); }
+void part2() {
+	Circuit circuit = phrase();
+
+	if (!circuit.contains("rx")) {
+		exit(1);
+	}
+	unordered_map<string, uint64_t> o;
+	for (const auto& id : circuit[circuit["rx"].mInIDs.front()].mInIDs) {
+		o[id] = 0;
+	}
+
+	bool fin = false;
+	uint64_t p = 0;
+	while (!fin) {
+		p++;
+		auto pulses = button(circuit);
+		for (const auto& pulse : pulses) {
+			if (pulse.level == HIGH && o.contains(pulse.src.id) && o[pulse.src.id] == 0) {
+				o[pulse.src.id] = p;
+			}
+		}
+
+		fin = all_of(o.begin(), o.end(), [](auto c) {return c.second != 0;});
+	}
+end:
+	cout << "Part 2: "  << ranges::fold_left(o | views::values, (uint64_t) 1, lcm<uint64_t, uint64_t>) << endl;
+}
+
+int main() {
+	part1();
+	part2();
+}
 
