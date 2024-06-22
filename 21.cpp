@@ -1,12 +1,13 @@
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <ranges>
 
 using namespace std;
 
@@ -14,7 +15,7 @@ typedef struct Vector2 {
 	int x, y;
 
 	Vector2() : x(0), y(0){};
-	Vector2(uint64_t _x, uint64_t _y) : x(_x), y(_y){};
+	Vector2(int _x, int _y) : x(_x), y(_y){};
 	bool operator==(const Vector2& rhs) const {
 		return x == rhs.x && y == rhs.y;
 	}
@@ -47,55 +48,11 @@ typedef struct Vector2 {
 
 vector<string> maze;
 
-typedef struct Node {
-	Vector2 position;
-	vector<const Node*> neighbors;
-	Node() : position(ZERO), neighbors(){};
-	Node(Vector2 pos) : position(pos), neighbors(){};
-
-	bool inside(vector<string>& maze, Vector2 offset = ZERO) {
-		return (position.x + offset.x >= 0 &&
-			position.x + offset.x < maze[0].size() &&
-			position.y + offset.y >= 0 &&
-			position.y + offset.y < maze.size());
-	}
-
-	bool operator==(const Node& other) const {
-		return position == other.position;
-	}
-	bool operator!=(const Node& other) const { return !(*this == other); }
-
-	friend std::ostream& operator<<(ostream& os, Node& node) {
-		os << "Node: (" << node.position.x << ", " << node.position.y
-		   << ")";
-		return os;
-	}
-} Node;
-
-namespace std {
-template <>
-struct hash<Vector2> {
-	std::size_t operator()(const Vector2& id) const noexcept {
-		return std::hash<int>()(id.x ^ (id.y << 16));
-	}
-};
-template <>
-struct hash<Node> {
-	std::size_t operator()(const Node& id) const noexcept {
-		return std::hash<int>()(id.position.x ^ (id.position.y << 16));
-	}
-};
-}  // namespace std
-
-static char& get(Vector2 pos) {
-	return maze[pos.y][pos.x];
-}
+static char& get(Vector2 pos) { return maze[pos.y][pos.x]; }
 
 bool inside(Vector2 position) {
-	return (position.x >= 0 &&
-		position.x < maze[0].size() &&
-		position.y >= 0 &&
-		position.y < maze.size());
+	return (position.x >= 0 && position.x < maze[0].size() &&
+		position.y >= 0 && position.y < maze.size());
 }
 
 uint64_t BFD(Vector2& start, const uint64_t& steps = 64) {
@@ -112,14 +69,13 @@ uint64_t BFD(Vector2& start, const uint64_t& steps = 64) {
 			auto node = frontier.front();
 			frontier.pop_front();
 
-			for (const auto& dir : (vector<Vector2>) {
-					UP,
-					DOWN,
-					LEFT,
-					RIGHT
-					}) {
+			for (const auto& dir :
+			     (vector<Vector2>){UP, DOWN, LEFT, RIGHT}) {
 				auto next = node + dir;
-				if (!inside(next) || get(next) == '#' || find(visited.begin(), visited.end(), next) != visited.end()) {
+				if (!inside(next) ||
+				    get(next) == '#' ||
+				    find(visited.begin(), visited.end(),
+					 next) != visited.end()) {
 					continue;
 				}
 
@@ -133,23 +89,20 @@ uint64_t BFD(Vector2& start, const uint64_t& steps = 64) {
 		swap(a, b);
 	}
 
-	/*
-	// Print out the results
-	while (!frontier.empty()) {
-		const Vector2 v = frontier.front();
-		get(v) = 'O';
-		tiles.pop_front();
-	}
-	for (auto& line : maze) {
-		cout << line << endl;
-	}
-	*/
-
 	return a;
 }
 
-void part1() {
+namespace std {
+template <> struct hash<Vector2> {
+	std::size_t operator()(const Vector2& id) const noexcept {
+		return std::hash<int>()(id.x ^ (id.y << 16));
+	}
+};
+}
+
+void parts() {
 	ifstream file("21.input");
+	maze.clear();
 	while (1) {
 		string line;
 		getline(file, line);
@@ -172,9 +125,42 @@ void part1() {
 	exit(1);  // No reach
 
 fin:
-	auto tiles = BFD(start, 64);
+	// BFD
+	deque<Vector2> frontier;
+	uint64_t steps = 0;
+	unordered_map<Vector2, uint64_t> ma;
 
-	cout << "Part 1: " << tiles << endl;
+	frontier.emplace_back(start);
+	ma[start] = 0;
+
+	while (!frontier.empty()) {
+		auto node = frontier.front();
+		frontier.pop_front();
+
+		for (const auto& dir :
+		     (vector<Vector2>){UP, DOWN, LEFT, RIGHT}) {
+			auto next = node + dir;
+			if (!inside(next) ||
+			    get(next) == '#' ||
+			    ma.contains(next)) {
+				continue;
+			}
+
+			frontier.emplace_back(next);
+			ma[next] = ma[node] + 1;
+		}
+	}
+
+	constexpr uint64_t n = 202300;
+	uint64_t smalleven = ranges::count_if(ma, [] (auto thing) -> bool { return thing.second > 65 && thing.second % 2 == 0; });
+	uint64_t smallodd = ranges::count_if(ma, [] (auto thing) -> bool { return thing.second > 65 && thing.second % 2 == 1; });
+	uint64_t alleven = ranges::count_if(ma, [] (auto thing) -> bool { return thing.second % 2 == 0; });
+	uint64_t allodd = ranges::count_if(ma, [] (auto thing) -> bool { return thing.second % 2 == 1; });
+
+	cout << "Part 1: " << smalleven << endl;
+	cout << "Part 2: " << ((n+1)*(n+1)) * allodd + (n*n) * alleven - (n+1) * smallodd + n * smalleven << endl;
 }
 
-int main() { part1(); }
+int main() {
+	parts();
+}
