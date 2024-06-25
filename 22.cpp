@@ -127,6 +127,96 @@ void fall(Brick& brick, vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, 
         ids++;
 }
 
+void part2() {
+	ifstream file("22.input");
+	vector<Brick> bricks;
+
+	// Map
+	vector<vector<uint64_t>> bmap;
+	unordered_map<uint64_t, Brick*> idtob;
+        uint64_t maxX = 0, maxY = 0;
+
+	// Read bricks
+        string line;
+        while (getline(file, line)) {
+                const vector<Vector3> vec = line | views::split('~') | views::transform([] (const auto& str) { 
+                        auto vec = str | views::split(',') | views::transform([] (const auto& str) {
+                                        return stoi(str.data());
+                        }) | ranges::to<vector<uint64_t>>();
+
+                        return Vector3(vec[0], vec[1], vec[2]);
+                }) | ranges::to<vector<Vector3>>();
+
+                Vector3 a(min(vec[0].x, vec[1].x), min(vec[0].y, vec[1].y), min(vec[0].z, vec[1].z));
+                Vector3 b(max(vec[0].x, vec[1].x), max(vec[0].y, vec[1].y), max(vec[0].z, vec[1].z));
+                maxX = max(maxX, b.x);
+                maxY = max(maxY, b.y);
+
+                bricks.emplace_back(Brick(a, b));
+        }
+        file.close();
+
+	Brick ground(0, 0, 0, maxX, maxY, 0);
+
+        // Init map and idtob
+        bmap.reserve(maxY + 1);
+        for (uint64_t y = 0; y <= maxY; y++) {
+                bmap.emplace_back((vector<uint64_t>) {});
+                bmap.back().reserve(maxX + 1);
+
+                for (uint64_t x = 0; x <= maxX; x++) {
+                        bmap[y].emplace_back(0);
+                }
+        }
+
+	idtob[0] = &ground;
+        ids++;
+
+        sort(bricks.begin(), bricks.end(), Brick());
+
+        // Fall bricks
+        for (Brick& brick : bricks) {
+                fall(brick, bmap, idtob);
+	}
+
+	// Count fall
+        uint64_t total = 0;
+        for (Brick& brick : bricks) {
+		queue<Brick*> toFall;
+		toFall.emplace(&brick);
+		unordered_set<uint64_t> falled;
+
+		while (!toFall.empty()) {
+			total++;
+			Brick* next = toFall.front();
+			toFall.pop();
+
+			falled.emplace(next->id);
+
+			// Check if there is some chain
+			for (auto& id : next->above) {
+				assert(id == 0 || idtob[id]->below.size() != 0);
+
+				bool fall = true;
+
+				for (auto& i : idtob[id]->below) {
+					if (!falled.contains(i)) {
+						fall = false;
+					}
+				}
+
+				if (fall) {
+					toFall.emplace(idtob[id]);
+				}
+			}
+		}
+
+		total--; // Don't count ourself
+        }
+
+        cout << "Day 22 part 2: " << total << endl;
+}
+
 void part1() {
 	ifstream file("22.input");
 	vector<Brick> bricks;
@@ -181,24 +271,20 @@ void part1() {
 
         uint64_t total = 0;
         for (Brick& brick : bricks) {
-                 // cout << brick << endl;
-
                 bool good = true;
-                for (auto& id : brick.above) {
-                        // cout << (char) (id + 'A' - 1 ) << endl;
 
+                for (auto& id : brick.above) {
                         assert(id == 0 || idtob[id]->below.size() != 0);
 
                         if (idtob[id]->below.size() == 1) {
                                 good = false;
 
-                                // break;
+                                break;
                         }
                 }
 
                 if (good) {
                         total++;
-                        // cout << "Good" << endl;
                 }
         }
 
@@ -207,4 +293,5 @@ void part1() {
 
 int main() {
 	part1();
+        part2();
 }
