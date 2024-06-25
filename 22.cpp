@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <ranges>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -52,15 +54,20 @@ inline Vector3 operator-(const Vector3& lhs, const Vector3& rhs) {
 typedef struct Brick {
 	Vector3 a, b;
 
+        // Maps
+        uint64_t id;
+        unordered_set<uint64_t> below;
+        unordered_set<uint64_t> above;
+
 	Brick() : a(), b() {};
         Brick(Vector3 _a, Vector3 _b) : a(_a), b(_b) {};
 	Brick(uint64_t xa, uint64_t ya, uint64_t za, uint64_t xb, uint64_t yb, uint64_t zb) : a(xa, ya, za), b(xb, yb, zb) {};
 
 	static bool operator()(const Brick& a, const Brick& b) {
-		return max(a.a.z, a.b.z) > max(b.a.z, b.b.z);
+		return max(a.a.z, a.b.z) < max(b.a.z, b.b.z);
 	}
 	friend ostream& operator<<(ostream& out, const Brick& vec) {
-		out << "Brick: " << vec.a << "~" << vec.b;
+		out << "Brick: " << vec.a << "~" << vec.b << " ID: " << (char) (vec.id + 'A' - 1);
 		return out;
 	}
 } Brick;
@@ -68,27 +75,47 @@ typedef struct Brick {
 uint64_t ids = 0;
 
 // Returns highest block in range
-const Brick highest(const Brick& brick, const vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, Brick>& idtob) {
-        Brick high = idtob[0]; // Highest default: ground
-        //
+vector<Brick*> highest(Brick& brick, const vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, Brick*>& idtob) {
+        uint64_t high = idtob[0]->b.z; // Highest default: ground
+
         for (int y = brick.a.y; y <= brick.b.y; y++) {
                 for (int x = brick.a.x; x <= brick.b.x; x++) {
-                        if (idtob[bmap[y][x]].b.z > high.b.z) {
-                                high = idtob[bmap[y][x]];
+                        if (idtob[bmap[y][x]]->b.z > high) {
+                                high = idtob[bmap[y][x]]->b.z;
                         }
                 }
         }
 
-        return high;
+        vector<Brick*> bricks;
+
+        for (int y = brick.a.y; y <= brick.b.y; y++) {
+                for (int x = brick.a.x; x <= brick.b.x; x++) {
+                        if (idtob[bmap[y][x]]->b.z == high) {
+                                bricks.emplace_back(idtob[bmap[y][x]]);
+                        }
+                }
+        }
+
+        return bricks;
 }
 
-void fall(Brick& brick, vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, Brick>& idtob) {
-        // Fall
-        const auto highestBlock = highest(brick, bmap, idtob);
+// Fall
+void fall(Brick& brick, vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, Brick*>& idtob) {
+        idtob[ids] = &brick;
+        brick.id = ids;
+
+        const auto highestBlocks = highest(brick, bmap, idtob);
 
         uint64_t hight = brick.b.z - brick.a.z;
-        brick.a.z = highestBlock.b.z + 1;
+        brick.a.z = highestBlocks[0]->b.z + 1;
         brick.b.z = brick.a.z + hight;
+
+        for (const auto& blockBelow : highestBlocks) {
+                // cout << *blockBelow << " to " << brick << endl;
+                blockBelow->above.insert(brick.id);
+
+                brick.below.insert(blockBelow->id);
+        }
 
         // Register the brick
         for (int y = brick.a.y; y <= brick.b.y; y++) {
@@ -96,17 +123,17 @@ void fall(Brick& brick, vector<vector<uint64_t>>& bmap, unordered_map<uint64_t, 
                         bmap[y][x] = ids;
                 }
         }
-        idtob[ids] = brick;
+
         ids++;
 }
 
 void part1() {
-	ifstream file("22.input.small");
-	priority_queue<Brick, vector<Brick>, Brick> bricksToFall;
+	ifstream file("22.input");
+	vector<Brick> bricks;
 	// Data structs
 	// Map
 	vector<vector<uint64_t>> bmap;
-	unordered_map<uint64_t, Brick> idtob;
+	unordered_map<uint64_t, Brick*> idtob;
         uint64_t maxX = 0, maxY = 0;
 
 	// Read bricks
@@ -125,7 +152,7 @@ void part1() {
                 maxX = max(maxX, b.x);
                 maxY = max(maxY, b.y);
 
-                bricksToFall.emplace(Brick(a, b));
+                bricks.emplace_back(Brick(a, b));
         }
         file.close();
 
@@ -141,23 +168,41 @@ void part1() {
                         bmap[y].emplace_back(0);
                 }
         }
-	idtob[0] = ground;
+
+	idtob[0] = &ground;
         ids++;
 
+        sort(bricks.begin(), bricks.end(), Brick());
+
         // Fall bricks
-        vector<Brick> bricks;
-	while (!bricksToFall.empty()) {
-		auto brick = bricksToFall.top();
-		bricksToFall.pop();
-
+        for (Brick& brick : bricks) {
                 fall(brick, bmap, idtob);
-
-                bricks.emplace_back(brick);
 	}
 
-        for (auto thing : bricks) {
-                cout << thing << endl;
+        uint64_t total = 0;
+        for (Brick& brick : bricks) {
+                 // cout << brick << endl;
+
+                bool good = true;
+                for (auto& id : brick.above) {
+                        // cout << (char) (id + 'A' - 1 ) << endl;
+
+                        assert(id == 0 || idtob[id]->below.size() != 0);
+
+                        if (idtob[id]->below.size() == 1) {
+                                good = false;
+
+                                // break;
+                        }
+                }
+
+                if (good) {
+                        total++;
+                        // cout << "Good" << endl;
+                }
         }
+
+        cout << "Day 22 part 1: " << total << endl;
 }
 
 int main() {
