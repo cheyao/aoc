@@ -1,8 +1,10 @@
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <ostream>
+#include <set>
 #include <sstream>
 #include <sys/types.h>
 #include <vector>
@@ -38,10 +40,10 @@ struct Vector3 {
 		return in;
 	}
 
-	int64_t dot(const Vector3& rhs) {
+	int64_t dot(const Vector3& rhs) const {
 		return this->x*rhs.x + this->y*rhs.y + this->z*rhs.z;
 	}
-	Vector3 cross(const Vector3& rhs) {
+	Vector3 cross(const Vector3& rhs) const {
 		return Vector3(this->y*rhs.z - this->z*rhs.y, this->z*rhs.x - this->x*rhs.z, this->x*rhs.y - this->y*rhs.x);
 	}
 };
@@ -168,29 +170,148 @@ void part2() {
 	}
 	file.close();
 
-	const Hail origin = hails.front();
-	hails.erase(hails.begin());
+	/*
+	const Vector3 p1 = a.pos - origin.pos;
+	const Vector3 v1 = a.vel - origin.vel;
 
-	const Hail a = hails.front();
-	hails.erase(hails.begin());
-	Vector3 p1 = a.pos - origin.pos;
-	Vector3 v1 = a.vel - origin.vel;
+	const Vector3 p2 = b.pos - origin.pos;
+	const Vector3 v2 = b.vel - origin.vel;
 
-	const Hail b = hails.front();
-	hails.erase(hails.begin());
-	Vector3 p2 = b.pos - origin.pos;
-	Vector3 v2 = b.vel - origin.vel;
-
-	double t1 = -((double) (p1.cross(p2)).dot(v2)) / ((v1.cross(p2)).dot(v2));
-	double t2 = -((double) (p1.cross(p2)).dot(v1)) / ((p1.cross(v2)).dot(v1));
-	cout << t1 << endl;
-	Vector3 c1 = a.pos + a.vel * t1;
-	Vector3 c2 = b.pos + b.vel * t2;
-	Vector3 v = (c2 - c1) / (t2 - t1);
-	Vector3 p = c1 - v * t1;
+	const int64_t t1 = -((p1.cross(p2)).dot(v2)) / ((v1.cross(p2)).dot(v2));
+	const int64_t t2 = -((p1.cross(p2)).dot(v1)) / ((p1.cross(v2)).dot(v1));
+	cout << (v1.cross(p2)).dot(v2) << endl;
+	cout << ((p1.cross(p2)).dot(v2)) << endl;
+	cout << origin << endl;
+	cout << a << endl;
+	cout << p1 << endl;
+	const Vector3 c1 = a.pos + a.vel * t1;
+	const Vector3 c2 = b.pos + b.vel * t2;
+	const Vector3 v = (c2 - c1) / (t2 - t1);
+	const Vector3 p = c1 - v * t1;
 
 	cout << p << " : " << v << endl;
-	cout << "Part 2: " << p.x + p.y + p.z << endl;
+	*/
+	
+	set<int64_t> px;
+	bool pxi = false;
+	set<int64_t> py;
+	bool pyi = false;
+	set<int64_t> pz;
+	bool pzi = false;
+
+	for (uint64_t i = 0; i < hails.size(); i++) {
+		const Hail& a = hails[i];
+
+		for (uint64_t j = i + 1; j < hails.size(); j++) {
+			const Hail& b = hails[j];
+
+			if (a.vel.x == b.vel.x && abs(a.vel.x) > 100) {
+				int64_t dif = b.pos.x - a.pos.x;
+				set<int64_t> ns;
+				for (int64_t v = -1000; v <= 1000; v++) {
+					if (v == a.vel.x) {
+						continue;
+					}
+
+					if (dif % (v - a.vel.x) == 0) {
+						ns.insert(v);
+					}
+				}
+				if (!pxi) {
+					px = ns;
+					pxi = true;
+				} else {
+					set<int64_t> n;
+					for (int64_t val : px) {
+						if (ns.contains(val)) {
+							n.insert(val);
+						}
+					}
+					px = n;
+				}
+			}
+			if (a.vel.y == b.vel.y && abs(a.vel.y) > 100) {
+				int64_t dif = b.pos.y - a.pos.y;
+				set<int64_t> ns;
+				for (int64_t v = -1000; v <= 1000; v++) {
+					if (v == a.vel.y) {
+						continue;
+					}
+
+					if (dif % (v - a.vel.y) == 0) {
+						ns.insert(v);
+					}
+				}
+				if (!pyi) {
+					py = ns;
+					pyi = true;
+				} else {
+					set<int64_t> n;
+					for (int64_t val : py) {
+						if (!ns.contains(val)) {
+							n.insert(val);
+						}
+					}
+					py = n;
+				}
+			}
+			if (a.vel.z == b.vel.z && abs(a.vel.z) > 100) {
+				int64_t dif = b.pos.z - a.pos.z;
+				set<int64_t> ns;
+				for (int64_t v = -1000; v <= 1000; v++) {
+					if (v == a.vel.z) {
+						continue;
+					}
+
+					if (dif % (v - a.vel.z) == 0) {
+						ns.insert(v);
+					}
+				}
+				if (!pzi) {
+					pz = ns;
+					pzi = true;
+				} else {
+					set<int64_t> n;
+					for (int64_t val : pz) {
+						if (!ns.contains(val)) {
+							n.insert(val);
+						}
+					}
+					pz = n;
+				}
+			}
+		}
+	}
+
+	for (auto i : px) {
+		cout << i;
+	}
+	cout << endl;
+	for (auto i : py) {
+		cout << i;
+	}
+	cout << endl;
+	for (auto i : pz) {
+		cout << i;
+	}
+	cout << endl;
+
+	const int64_t rvx = *px.begin();
+	const int64_t rvy = *py.begin();
+	const int64_t rvz = *pz.begin();
+	
+	Hail a = hails[0];
+	Hail b = hails[1];
+	const double ma = (double)(a.vel.y-rvy)/(double)(a.vel.x-rvx);
+	const double mb = (double)(b.vel.y-rvy)/(double)(b.vel.x-rvx);
+	const auto ca = a.pos.y - (ma*a.pos.x);
+	const auto cb = b.pos.y - (mb*b.pos.x);
+	int64_t x = (int64_t) ((cb-ca)/(ma-mb));
+	int64_t y = (int64_t) (ma-x + ca);
+	auto time = (x - a.pos.x) / (a.vel.x - rvx);
+	int64_t z = a.pos.z + (a.vel.z - rvz) * time;
+
+	 cout << "Part 2: " << x + y + z << endl;
 }
 
 void part1() {
