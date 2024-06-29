@@ -37,6 +37,13 @@ struct Vector3 {
 		in >> vec.x >> vec.y >> vec.z;
 		return in;
 	}
+
+	int64_t dot(const Vector3& rhs) {
+		return this->x*rhs.x + this->y*rhs.y + this->z*rhs.z;
+	}
+	Vector3 cross(const Vector3& rhs) {
+		return Vector3(this->y*rhs.z - this->z*rhs.y, this->z*rhs.x - this->x*rhs.z, this->x*rhs.y - this->y*rhs.x);
+	}
 };
 
 inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs) {
@@ -47,6 +54,27 @@ inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs) {
 inline Vector3 operator-(const Vector3& lhs, const Vector3& rhs) {
 	Vector3 result = lhs;
 	result -= rhs;
+	return result;
+}
+inline Vector3 operator*(const Vector3& lhs, const double rhs) {
+	Vector3 result = lhs;
+	result.x *= rhs;
+	result.y *= rhs;
+	result.z *= rhs;
+	return result;
+}
+inline Vector3 operator*(const Vector3& lhs, const int64_t rhs) {
+	Vector3 result = lhs;
+	result.x *= rhs;
+	result.y *= rhs;
+	result.z *= rhs;
+	return result;
+}
+inline Vector3 operator/(const Vector3& lhs, const int64_t rhs) {
+	Vector3 result = lhs;
+	result.x /= rhs;
+	result.y /= rhs;
+	result.z /= rhs;
 	return result;
 }
 
@@ -80,6 +108,91 @@ struct Hail {
 	}
 };
 
+/*
+Source: Reddit user 
+
+Stones 1 and 2, relative to stone 0:
+p1 = position_1 - position_0
+v1 = velocity_1 - velocity_0
+p2 = position_2 - position_0
+v2 = velocity_2 - velocity_0
+
+Let t1 and t2 be the times that the rock collides with hailstones 1 and 2 respectively.
+
+Viewed from hailstone 0, the two collisions are thus at
+p1 + t1 * v1
+p2 + t2 * v2
+
+Hailstone 0 is always at the origin, thus its collision is at 0. Since all three collisions must form a straight line, the above two collision vectors must be collinear, and their cross product will be 0:
+
+(p1 + t1 * v1) x (p2 + t2 * v2) = 0
+
+Cross product is distributive with vector addition and compatible with scalar multiplication, so the above can be expanded:
+
+(p1 x p2) + t1 * (v1 x p2) + t2 * (p1 x v2) + t1 * t2 * (v1 x v2) = 0
+
+This is starting to look like a useful linear equation, except for that t1 * t2 term. Let's try to get rid of it. Dot product and cross product interact in a useful way. For arbitrary vectors a and b:
+
+(a x b) * a = (a x b) * b = 0.
+
+We can use this property to get rid of the t1 * t2 term. Let's take the dot product with v2. Note that dot product is also distributive with vector addition and compatible with scalar multiplication. The dot product zeros out both the t2 and t1*t2 terms, leaving a simple linear equation for t1:
+
+(p1 x p2) * v2 + t1 * (v1 x p2) * v2 = 0
+
+t1 = -((p1 x p2) * v2) / ((v1 x p2) * v2)
+
+If we use v1 instead of v2 for the dot product, we get this instead:
+
+(p1 x p2) * v1 + t2 * (p1 x v2) * v1 = 0
+
+t2 = -((p1 x p2) * v1) / ((p1 x v2) * v1)
+
+Once we have t1 and t2 we can compute the locations (in absolute coordinates) of the two collisions and work backwards to find the velocity and initial position of the rock.
+
+c1 = position_1 + t1 * velocity_1
+c2 = position_2 + t2 * velocity_2
+v = (c2 - c1) / (t2 - t1)
+p = c1 - t1 * v
+*/
+
+void part2() {
+	ifstream file("24.input");
+	vector<Hail> hails;
+	while (1) {
+		string line;
+		getline(file, line);
+		if (file.eof()) {
+			break;
+		}
+		hails.emplace_back(Hail(line));
+	}
+	file.close();
+
+	const Hail origin = hails.front();
+	hails.erase(hails.begin());
+
+	const Hail a = hails.front();
+	hails.erase(hails.begin());
+	Vector3 p1 = a.pos - origin.pos;
+	Vector3 v1 = a.vel - origin.vel;
+
+	const Hail b = hails.front();
+	hails.erase(hails.begin());
+	Vector3 p2 = b.pos - origin.pos;
+	Vector3 v2 = b.vel - origin.vel;
+
+	double t1 = -((double) (p1.cross(p2)).dot(v2)) / ((v1.cross(p2)).dot(v2));
+	double t2 = -((double) (p1.cross(p2)).dot(v1)) / ((p1.cross(v2)).dot(v1));
+	cout << t1 << endl;
+	Vector3 c1 = a.pos + a.vel * t1;
+	Vector3 c2 = b.pos + b.vel * t2;
+	Vector3 v = (c2 - c1) / (t2 - t1);
+	Vector3 p = c1 - v * t1;
+
+	cout << p << " : " << v << endl;
+	cout << "Part 2: " << p.x + p.y + p.z << endl;
+}
+
 void part1() {
 	ifstream file("24.input");
 	vector<Hail> hails;
@@ -91,6 +204,7 @@ void part1() {
 		}
 		hails.emplace_back(Hail(line));
 	}
+	file.close();
 
 	// Maths corner
 	// https://stackoverflow.com/questions/16524096/how-to-calculate-the-point-of-intersection-between-two-lines
@@ -139,4 +253,5 @@ void part1() {
 
 int main() {
 	part1();
+	part2();
 }
