@@ -2,6 +2,7 @@
 
 !*.cpp
 !README.md
+!LICENSE
 !.gitignore
 !.git 
 !.gitsubmodules
