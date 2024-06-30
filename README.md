@@ -1,7 +1,7 @@
 # AoC 2023
 AoC 2023 in c++
 
-Yay I am actually going through all the problems!
+GG, First time that I finished aoc!
 
 Usage:
 ```
