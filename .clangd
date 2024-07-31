@@ -1,0 +1,4 @@
+CompileFlags:
+  Compiler: /usr/local/Cellar/llvm/18.1.8/bin/clang++
+  Add: [-std=c++26, -I/usr/local/opt/llvm/include, -isystem /usr/local/include, -stdlib=libc++]
+#, -isysroot /usr/local/opt/llvm/Toolchains/LLVM18.1.8.xctoolchain/]

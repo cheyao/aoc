@@ -1,9 +1,4 @@
-*
-
-!*.cpp
-!README.md
-!LICENSE
-!.gitignore
-!.git 
-!.gitsubmodules
+.DS_Store
+*.input
+*.small
 
