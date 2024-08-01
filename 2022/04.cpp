@@ -1,15 +1,17 @@
 #include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <ranges>
 #include <string>
-#include <unordered_map>
-#include <utility>
+#include <vector>
 
 using namespace std;
+using std::operator""sv;
 
-constexpr const char* FILE_NAME = "02.input";
+constexpr const char* FILE_NAME = "04.input";
 
 vector<string> getFile() {
 	vector<string> lines;
@@ -33,61 +35,70 @@ int main(int argc, char** argv) {
 }
 
 uint64_t part1() {
-	const unordered_map<char, uint64_t> MM = {
-		{'X', 1},
-		{'Y', 2},
-		{'Z', 3}
-	};
-
 	auto lines = getFile();
 
-	uint64_t score = 0;
-	for (const std::string& line : lines) {
-		const char O = line[0] - 'A';
-		const char Y = line[2] - 'X';
+	uint64_t cnt = 0;
+	for (const auto& line : lines) {
+		vector<vector<uint64_t>> pairs =
+			line | views::split(","sv) | views::transform([](const auto& p) {
+				return p | views::split("-"sv) | ranges::to<vector<string>>() |
+					   views::transform([](const string& s) { return stoull(s); });
+			}) |
+			ranges::to<vector<vector<uint64_t>>>();
 
-		score += MM.at(line[2]);
+		pair<uint64_t, uint64_t> a = {pairs[0][0], pairs[0][1]};
+		pair<uint64_t, uint64_t> b = {pairs[1][0], pairs[1][1]};
 
-		if (O == Y) {
-			score += 3;
+		if (a.first <= b.first && a.second >= b.second) {
+			cnt++;
 			continue;
 		}
 
-		if ((Y - O + 3) % 3 == 1) {
-			score += 6;
+		if (a.first >= b.first && a.second <= b.second) {
+			cnt++;
+			continue;
 		}
 	}
 
-	return score;
+	return cnt;
 }
 
 uint64_t part2() {
 	auto lines = getFile();
 
-	uint64_t score = 0;
-	for (const std::string& line : lines) {
-		const char O = line[0] - 'A';
-		const char Y = line[2] - 'X';
+	uint64_t cnt = 0;
+	for (const auto& line : lines) {
+		vector<vector<uint64_t>> pairs =
+			line | views::split(","sv) | views::transform([](const auto& p) {
+				return p | views::split("-"sv) | ranges::to<vector<string>>() |
+					   views::transform([](const string& s) { return stoull(s); });
+			}) |
+			ranges::to<vector<vector<uint64_t>>>();
 
-		score += Y * 3;
+		pair<uint64_t, uint64_t> a = {pairs[0][0], pairs[0][1]};
+		pair<uint64_t, uint64_t> b = {pairs[1][0], pairs[1][1]};
 
-		if (Y == 1) {
-			score += O + 1;
+		// A: |----|
+		// B:  |--|
+		//
+		// A:  |--|
+		// B: |----|
+
+		if (b.first >= a.first && b.first <= a.second) {
+			cnt++;
 			continue;
 		}
 
-		if (Y == 2) {
-			score += (O + 1) % 3 + 1;
+		if (b.second >= a.first && b.second <= a.second) {
+			cnt++;
 			continue;
 		}
 
-		if (Y == 0) {
-			score += (O - 1 + 3) % 3 + 1;
+		if (a.first >= b.first && a.second <= b.second) {
+			cnt++;
 			continue;
 		}
-
-		unreachable();
 	}
 
-	return score;
+	return cnt;
 }
