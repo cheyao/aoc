@@ -1,4 +1,7 @@
 CompileFlags:
   Compiler: /usr/local/Cellar/llvm/18.1.8/bin/clang++
-  Add: [-std=c++26, -I/usr/local/opt/llvm/include, -isystem /usr/local/include, -stdlib=libc++]
-#, -isysroot /usr/local/opt/llvm/Toolchains/LLVM18.1.8.xctoolchain/]
+#  Add: [-std=c++26, -I/usr/local/opt/llvm/include, -isystem /usr/local/include, -stdlib=libc++]
+  Add: [-std=c++26, -stdlib=libstdc++, -I/usr/local/opt/gcc/include/c++/14, -I/usr/local/opt/gcc/include/c++/14/x86_64-apple-darwin20, -I/usr/local/opt/gcc/include/c++/14/backward, -I/usr/local/opt/gcc/lib/gcc/current/gcc/x86_64-apple-darwin20/14/include, -I/usr/local/opt/gcc/lib/gcc/current/gcc/x86_64-apple-darwin20/14/include-fixed]
+  # /Library/Developer/CommandLineTools/SDKs/MacOSX11.sdk/usr/include, 
+  # /Library/Developer/CommandLineTools/SDKs/MacOSX11.sdk/System/Library/Frameworks, 
+  # -isysroot /usr/local/opt/llvm/Toolchains/LLVM18.1.8.xctoolchain/]
