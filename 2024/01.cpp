@@ -5,8 +5,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
-#include <limits>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -39,18 +37,11 @@ void part1() {
 		b.emplace_back(stol(parts[1]));
 	}
 
-	uint64_t i = a.size();
-	while (i--) {
-		auto amin = ranges::min_element(a);
-		auto bmin = ranges::min_element(b);
+	ranges::sort(a);
+	ranges::sort(b);
 
-		assert(*amin != std::numeric_limits<uint64_t>::max());
-		assert(*bmin != std::numeric_limits<uint64_t>::max());
-
-		sum += abs(static_cast<int64_t>(*bmin - *amin));
-
-		*amin = std::numeric_limits<uint64_t>::max();
-		*bmin = std::numeric_limits<uint64_t>::max();
+	for (const auto& [ia, ib] : views::zip(a, b)) {
+		sum += abs(static_cast<int64_t>(ia - ib));
 	}
 
 	cout << "Part 1:" << sum << endl;
