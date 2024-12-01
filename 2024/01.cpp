@@ -47,9 +47,6 @@ void part1() {
 		assert(*amin != std::numeric_limits<uint64_t>::max());
 		assert(*bmin != std::numeric_limits<uint64_t>::max());
 
-		auto adist = distance(a.begin(), amin);
-		auto bdist = distance(b.begin(), bmin);
-
 		sum += abs(static_cast<int64_t>(*bmin - *amin));
 
 		*amin = std::numeric_limits<uint64_t>::max();
