@@ -46,6 +46,15 @@ void part1() {
 	cout << "Part 1:" << sum << endl;
 }
 
+bool isGood(const std::span<const uint64_t> v) {
+	return ranges::all_of(
+			   v | views::slide(2),
+			   [](const auto v) { return v[0] < v[1] && v[1] - v[0] >= 1 && v[1] - v[0] <= 3; }) ||
+		   ranges::all_of(v | views::slide(2), [](const auto v) {
+			   return v[0] > v[1] && v[0] - v[1] >= 1 && v[0] - v[1] <= 3;
+		   });
+}
+
 void part2() {
 	uint64_t sum = 0;
 
@@ -53,50 +62,24 @@ void part2() {
 		const auto v = line | views::split(" "sv) |
 					   views::transform([](const auto s) { return atoll(s.data()); }) |
 					   ranges::to<vector<uint64_t>>();
-		auto s = v | views::slide(2);
-		cout << v[0];
 
-		if (ranges::all_of(
-				v | views::slide(2),
-				[](const auto v) { return v[0] < v[1] && v[1] - v[0] >= 1 && v[1] - v[0] <= 3; }) ||
-			ranges::all_of(v | views::slide(2), [](const auto v) {
-				return v[0] > v[1] && v[0] - v[1] >= 1 && v[0] - v[1] <= 3;
-			})) {
+		if (isGood(v)) {
 			++sum;
 			continue;
 		}
 
-		auto a = ranges::find_if(
-			s, [](const auto v) { return v[0] < v[1] && v[1] - v[0] >= 1 && v[1] - v[0] <= 3; });
-
-		if (a != s.end()) {
+		for (auto i = 0; i < v.size(); ++i) {
 			auto n = v;
-			n.erase(ranges::find(n, (*a)[1]));
+			n.erase(n.begin() + i);
 
-			if (ranges::all_of(n | views::slide(2), [](const auto v) {
-					return v[0] < v[1] && v[1] - v[0] >= 1 && v[1] - v[0] <= 3;
-				})) {
+			if (isGood(n)) {
 				++sum;
-				continue;
+
+				break;
 			}
 		}
 
-		auto b = ranges::find_if(
-			s, [](const auto v) { return (v[0] > v[1] && v[0] - v[1] >= 1 && v[0] - v[1] <= 3); });
-
-		if (b != s.end()) {
-			auto n = v;
-			n.erase(ranges::find(n, (*b)[1]));
-			cout << ' ' <<(*b)[1] << endl;
-
-			if (ranges::all_of(n | views::slide(2), [](const auto v) {
-					return (v[0] > v[1] && v[0] - v[1] >= 1 && v[0] - v[1] <= 3);
-				})) {
-				++sum;
-
-				continue;
-			}
-		}
+		continue;
 	}
 
 	cout << "Part 2:" << sum << endl;
