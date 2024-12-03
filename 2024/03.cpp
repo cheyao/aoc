@@ -42,8 +42,6 @@ void part1() {
 				sum += stoull(match[1]) * stoull(match[2]);
 			}
 		}
-
-		const auto m = regex_match(line, base_match, r);
 	}
 
 	cout << "Part 1: " << sum << endl;
@@ -73,8 +71,6 @@ void part2() {
 				active = true;
 			}
 		}
-
-		const auto m = regex_match(line, base_match, r);
 	}
 
 	cout << "Part 2: " << sum << endl;
