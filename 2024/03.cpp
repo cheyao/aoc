@@ -51,8 +51,30 @@ void part1() {
 
 void part2() {
 	uint64_t sum = 0;
+	bool active = true;
 
+	const regex r("mul\\((\\d*),(\\d*)\\)|do\\(\\)|don\'t\\(\\)");
 	for (const auto& line : get()) {
+		std::smatch base_match;
+
+		auto words_begin = std::sregex_iterator(line.begin(), line.end(), r);
+		auto words_end = std::sregex_iterator();
+
+		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+			std::smatch match = *i;
+
+			if (match.str()[0] == 'm') {
+				if (active) {
+					sum += stoull(match[1]) * stoull(match[2]);
+				}
+			} else if (match[0].str()[2] == 'n') {
+				active = false;
+			} else {
+				active = true;
+			}
+		}
+
+		const auto m = regex_match(line, base_match, r);
 	}
 
 	cout << "Part 2: " << sum << endl;
