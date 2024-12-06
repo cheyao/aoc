@@ -1,8 +1,6 @@
 #include <cassert>
 #include <cctype>
-#include <cinttypes>
 #include <csignal>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
