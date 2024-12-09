@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cmath>
@@ -9,11 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include <ranges>
-#include <span>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
