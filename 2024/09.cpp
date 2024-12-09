@@ -1,4 +1,3 @@
-#include <array>
 #include <cassert>
 #include <cctype>
 #include <cmath>
@@ -8,7 +7,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -44,18 +42,18 @@ void part1() {
 		}
 	}
 
-	while (disk.back() == max) {
-		disk.pop_back();
-	}
-
 	for (size_t i = 0; i < disk.size(); ++i) {
-		if (disk[i] == max) {
-			std::swap(disk[i], disk.back());
-		}
-
 		while (disk.back() == max) {
 			disk.pop_back();
 		}
+
+		if (disk[i] == max) {
+			std::swap(disk[i], disk.back());
+		}
+	}
+
+	while (disk.back() == max) {
+		disk.pop_back();
 	}
 
 	for (size_t i = 0; i < disk.size(); ++i) {
@@ -73,31 +71,34 @@ struct block {
 void part2() {
 	uint64_t sum = 0;
 
+	const string line = get()[0];
+
 	vector<block> blocks;
+	blocks.reserve(line.size() / 2 + 1);
 	vector<block> spaces;
+	spaces.reserve(line.size() / 2 + 1);
+
 	constexpr const static uint64_t max = numeric_limits<uint64_t>::max();
-	for (const auto& line : get()) {
-		uint64_t pos = 0;
+	uint64_t pos = 0;
 
-		for (size_t i = 0; i < line.size(); ++i) {
-			if (i % 2 == 0) {
-				blocks.emplace_back(block{line[i] - '0', pos});
-			} else {
-				spaces.emplace_back(block{line[i] - '0', pos});
-			}
-
-			pos += line[i] - '0';
+	for (size_t i = 0; i < line.size(); ++i) {
+		if (i % 2 == 0) {
+			blocks.emplace_back(block{line[i] - '0', pos});
+		} else {
+			spaces.emplace_back(block{line[i] - '0', pos});
 		}
+
+		pos += line[i] - '0';
 	}
 
 	for (size_t i = blocks.size(); i != 0; --i) {
 		for (auto& space : spaces) {
-			if (space.pos >= blocks[i - 1].pos) {
-				break;
-			}
-
 			if (space.size < blocks[i - 1].size) {
 				continue;
+			}
+
+			if (space.pos >= blocks[i - 1].pos) {
+				break;
 			}
 
 			blocks[i - 1].pos = space.pos;
