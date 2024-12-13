@@ -8,10 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <ostream>
-#include <ranges>
 #include <string>
 #include <sys/types.h>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
