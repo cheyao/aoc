@@ -2,14 +2,15 @@
 #include <cctype>
 #include <cmath>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <ostream>
 #include <queue>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <sys/types.h>
 #include <unordered_map>
@@ -39,106 +40,50 @@ using pos = pair<pair<score, vec2>, vec2>;
 vector<pos> getNext(const pos cur) {
 	if (cur.first.second == UP) {
 		return {
-			make_pair(make_pair(cur.first.first + 1001, LEFT), cur.second + LEFT),
+			make_pair(make_pair(cur.first.first + 1000, LEFT), cur.second),
 			make_pair(make_pair(cur.first.first + 1, UP), cur.second + UP),
-			make_pair(make_pair(cur.first.first + 1001, RIGHT), cur.second + RIGHT),
+			make_pair(make_pair(cur.first.first + 1000, RIGHT), cur.second),
 		};
 	}
 	if (cur.first.second == DOWN) {
 		return {
-			make_pair(make_pair(cur.first.first + 1001, LEFT), cur.second + LEFT),
+			make_pair(make_pair(cur.first.first + 1000, LEFT), cur.second),
 			make_pair(make_pair(cur.first.first + 1, DOWN), cur.second + DOWN),
-			make_pair(make_pair(cur.first.first + 1001, RIGHT), cur.second + RIGHT),
+			make_pair(make_pair(cur.first.first + 1000, RIGHT), cur.second),
 		};
 	}
 	if (cur.first.second == RIGHT) {
 		return {
-			make_pair(make_pair(cur.first.first + 1001, UP), cur.second + UP),
+			make_pair(make_pair(cur.first.first + 1000, UP), cur.second),
 			make_pair(make_pair(cur.first.first + 1, RIGHT), cur.second + RIGHT),
-			make_pair(make_pair(cur.first.first + 1001, DOWN), cur.second + DOWN),
+			make_pair(make_pair(cur.first.first + 1000, DOWN), cur.second),
 		};
 	}
 	if (cur.first.second == LEFT) {
 		return {
-			make_pair(make_pair(cur.first.first + 1001, UP), cur.second + UP),
+			make_pair(make_pair(cur.first.first + 1000, UP), cur.second),
 			make_pair(make_pair(cur.first.first + 1, LEFT), cur.second + LEFT),
-			make_pair(make_pair(cur.first.first + 1001, DOWN), cur.second + DOWN),
+			make_pair(make_pair(cur.first.first + 1000, DOWN), cur.second),
 		};
 	}
-
-	std::unreachable();
+	cout << "ERR!";
+	return {};
 }
-
-uint64_t sum1 = 0;
-unordered_map<vec2, vec2> llast;
-unordered_map<vec2, uint64_t> ccost_so_far;
 
 void part1() {
-	auto map = get();
-	vec2 start;
-	vec2 end;
-	for (size_t y = 0; y < map.size(); ++y) {
-		for (size_t x = 0; x < map[0].size(); ++x) {
-			if (map[y][x] == 'S') {
-				start = make_pair(x, y);
-				continue;
-			}
-
-			if (map[y][x] == 'E') {
-				end = make_pair(x, y);
-				continue;
-			}
-		}
-	}
-
-	auto cmp = [](const pos& a, const pos& b) { return a.first.first > b.first.first; };
-
-	priority_queue<pos, vector<pos>, decltype(cmp)> front(cmp);
-	front.emplace(make_pair(make_pair(0, RIGHT), start));
-	ccost_so_far[start] = 0;
-	llast[start] = make_pair(-1, -1);
-
-	while (!front.empty()) {
-		const auto cur = front.top();
-		front.pop();
-
-		for (const auto& next : getNext(cur)) {
-			if (at(map, next.second) == '#') {
-				continue;
-			}
-
-			if (ccost_so_far.contains(next.second) &&
-				ccost_so_far[next.second] <= next.first.first) {
-				continue;
-			}
-
-			[[unlikely]] if (next.second == end) { sum1 = next.first.first; }
-
-			ccost_so_far[next.second] = next.first.first;
-			front.push(next);
-			llast[next.second] = cur.second;
-		}
-	}
-
-	cout << "Part 1:" << sum1 << endl;
-}
-
-void part2() {
 	uint64_t sum = 0;
 
 	auto map = get();
 	vec2 start;
 	vec2 end;
-	for (size_t y = 0; y < map.size(); ++y) {
-		for (size_t x = 0; x < map[0].size(); ++x) {
-			if (map[y][x] == 'S') {
-				end = make_pair(x, y);
-				continue;
+	for (const auto& [y, line] : views::enumerate(map)) {
+		for (const auto& [x, c] : views::enumerate(line)) {
+			if (c == 'S') {
+				start = make_pair(x, y);
 			}
 
-			if (map[y][x] == 'E') {
-				start = make_pair(x, y);
-				continue;
+			if (c == 'E') {
+				end = make_pair(x, y);
 			}
 		}
 	}
@@ -146,40 +91,43 @@ void part2() {
 	auto cmp = [](const pos& a, const pos& b) { return a.first.first > b.first.first; };
 
 	priority_queue<pos, vector<pos>, decltype(cmp)> front(cmp);
-	front.emplace(make_pair(make_pair(0, LEFT), start));
-	front.emplace(make_pair(make_pair(0, DOWN), start));
+	vector<pair<vec2, vec2>> came;
+	front.emplace(make_pair(make_pair(0, RIGHT), start));
 	unordered_map<vec2, uint64_t> cost_so_far;
-	unordered_map<vec2, vec2> last;
 	cost_so_far[start] = 0;
-	last[start] = make_pair(-1, -1);
-	deque<vec2> dst;
 
 	while (!front.empty()) {
 		const auto cur = front.top();
 		front.pop();
-
-		if (ccost_so_far[cur.second] + cur.first.first == sum1) {
-			++sum;
-		}
 
 		for (const auto& next : getNext(cur)) {
 			if (at(map, next.second) == '#') {
 				continue;
 			}
 
-			if (cost_so_far.contains(next.second) && cost_so_far[next.second] <= next.first.first) {
+			if (ranges::find(came, make_pair(next.first.second, next.second)) != came.end() &&
+				cost_so_far[next.second] <= next.first.first) {
 				continue;
 			}
 
-			if (next.second == end) {
-				dst.emplace_back(cur.second);
+			if (at(map, next.second) == 'E') {
+				sum = next.first.first;
+
+				goto end;
 			}
 
-			cost_so_far[next.second] = next.first.first;
+			came.emplace_back(make_pair(next.first.second, next.second));
 			front.push(next);
-			last[next.second] = cur.second;
+			cost_so_far[next.second] = next.first.first;
 		}
 	}
+
+end:
+	cout << "Part 1:" << sum << endl;
+}
+
+void part2() {
+	uint64_t sum = 0;
 
 	cout << "Part 2:" << sum << endl;
 }
