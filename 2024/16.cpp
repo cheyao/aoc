@@ -207,7 +207,6 @@ void part2() {
 	}
 
 	for (const auto& l : map) {
-		cout << l << '\n';
 		for (const auto c : l) {
 			sum += c == 'O';
 		}
