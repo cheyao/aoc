@@ -10,7 +10,6 @@
 #include <limits>
 #include <ostream>
 #include <queue>
-#include <ranges>
 #include <string>
 #include <sys/types.h>
 #include <unordered_map>
