@@ -117,7 +117,78 @@ vector<string> getSM(char ac, char bc) {
 		return {A + "A"};
 	}
 
+	if (a.first == 0 && b.second == 3) {
+		return {A + B + "A"};
+	}
+
+	if (a.second == 3 && b.first == 0) {
+		return {B + A + "A"};
+	}
+
 	return {A + B + "A", B + A + "A"};
+}
+
+vector<string> getSC(char ac, char bc) {
+	static unordered_map<char, vec2> ctop = {
+		{'A', {2, 0}}, {'^', {1, 0}}, {'v', {1, 1}}, {'<', {0, 1}}, {'>', {2, 1}},
+	};
+
+	vec2 a = ctop[ac];
+	vec2 b = ctop[bc];
+
+	string A;
+	string B;
+
+	int64_t xdiff = b.first - a.first;
+	int64_t ydiff = b.second - a.second;
+
+	if (xdiff >= 0) {
+		A = string(xdiff, '>');
+	} else {
+		A = string(llabs(xdiff), '<');
+	}
+
+	if (ydiff >= 0) {
+		B = string(ydiff, 'v');
+	} else {
+		B = string(llabs(ydiff), '^');
+	}
+
+	if (xdiff == 0) {
+		return {B + "A"};
+	}
+	if (ydiff == 0) {
+		return {A + "A"};
+	}
+
+	if (a.first == 0 && b.second == 0) {
+		return {A + B + "A"};
+	}
+
+	if (a.second == 0 && b.first == 0) {
+		return {B + A + "A"};
+	}
+
+	return {A + B + "A", B + A + "A"};
+}
+
+string getShort(string a, string b) {
+	string posa = getSC('A', a[0])[0];
+	string posb = getSC('A', b[0])[0];
+
+	if (posa.size() == posb.size()) {
+		if (getShort(posa, posb) == posa) {
+			return a;
+		} else {
+			return b;
+		}
+	}
+
+	if (posa.size() < posb.size()) {
+		return a;
+	}
+
+	return b;
 }
 
 void part1() {
@@ -125,14 +196,47 @@ void part1() {
 
 	for (const auto code : get()) {
 		// Need to start from the end
-		for (const auto v : ("A" + code) | views::slide(2)) {
-			auto sets = getSM(v[0], v[1]);
-			for (const auto s : sets)
-				cout << s << '\n';
-			cout << '\n';
+		string pos = "";
+		for (const auto step : ("A" + code) | views::slide(2)) {
+			const auto s = getSM(step[0], step[1]);
+
+			if (s.size() == 1) {
+				pos += s[0];
+			} else {
+				pos += getShort(s[0], s[1]);
+			}
 		}
 
-		sum += stoull(code);
+		string pos2;
+		for (const auto step : ("A" + pos) | views::slide(2)) {
+			const auto s = getSC(step[0], step[1]);
+
+			if (s.size() == 1) {
+				pos2 += s[0];
+			} else {
+				pos2 += getShort(s[0], s[1]);
+			}
+		}
+
+		string pos3;
+		for (const auto step : ("A" + pos2) | views::slide(2)) {
+			const auto s = getSC(step[0], step[1]);
+
+			if (s.size() == 1) {
+				pos3 += s[0];
+			} else {
+				pos3 += getShort(s[0], s[1]);
+			}
+		}
+
+		cout << pos << '\n';
+		cout << pos2 << '\n';
+		cout << pos3 << '\n';
+
+		// auto out = getShort(rcode);
+
+		sum += stoull(code) * pos3.size();
+		cout << '\n';
 	}
 
 	cout << "Part 1:" << sum << endl;
