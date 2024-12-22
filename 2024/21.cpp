@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cstdint>
@@ -175,14 +174,6 @@ vector<string> getRemote(char ac, char bc) {
 string getShort(const string& a, const string& b, int j);
 
 string getFullString(const string& a, int j) {
-	/*
-	static vector<unordered_map<string, string>> cache(27);
-
-	if (cache[j].contains(a)) {
-		return cache[j][a];
-	}
-	*/
-
 	string pos = "";
 
 	for (const auto step : ("A" + a) | views::slide(2)) {
@@ -195,15 +186,13 @@ string getFullString(const string& a, int j) {
 		}
 	}
 
-	// cache[j][a] = pos;
 	return pos;
 }
 
 string getShortI(const string& a, const string& b, const int j);
 
+static vector<unordered_map<string, string>> cache(27);
 string getShort(const string& a, const string& b, const int j) {
-	static vector<unordered_map<string, string>> cache(27);
-
 	if (!cache[j].contains(a + "|" + b)) {
 		cache[j][a + "|" + b] = getShortI(a, b, j);
 	}
@@ -213,8 +202,41 @@ string getShort(const string& a, const string& b, const int j) {
 
 // Implementation
 string getShortI(const string& a, const string& b, const int j) {
+	assert(a.size() == b.size());
+
+	string posa = "";
+	string posb = "";
+
+	auto stepa = ("A" + a) | views::slide(2);
+	auto stepb = ("A" + b) | views::slide(2);
+
+	for (size_t i = 0; i < stepa.size(); ++i) {
+		const auto sa = getRemote(stepa[i][0], stepa[i][1]);
+		const auto sb = getRemote(stepb[i][0], stepb[i][1]);
+
+		if (sa.size() == 1 || j == 0) {
+			posa += sa[0];
+		} else {
+			posa += getShort(sa[0], sa[1], j - 1);
+		}
+
+		if (sb.size() == 1 || j == 0) {
+			posb += sb[0];
+		} else {
+			posb += getShort(sb[0], sb[1], j - 1);
+		}
+
+		if (stepa[i][1] == 'A' && stepb[i][1] == 'A') {
+			if (posa.size() != posb.size()) {
+				break;
+			}
+		}
+	}
+
+	/*
 	string posa = getFullString(a, j);
 	string posb = getFullString(b, j);
+	*/
 
 	// Break tie
 	if (posa.size() == posb.size()) {
@@ -261,6 +283,36 @@ void part1() {
 	cout << "Part 1:" << sum << endl;
 }
 
+uint64_t computeI(uint64_t j, const string& s);
+
+uint64_t compute(uint64_t j, const string& s) {
+	static array<unordered_map<string, uint64_t>, 26> cache;
+
+	if (!cache[j].contains(s)) {
+		cache[j][s] = computeI(j, s);
+	}
+
+	return cache[j][s];
+}
+
+uint64_t computeI(uint64_t j, const string& s) {
+	uint64_t size = 0;
+
+	for (const auto step : ("A" + s) | views::slide(2)) {
+		const auto need = getRemote(step[0], step[1]);
+
+		if (j == 24) {
+			size += need[0].size();
+		} else if (need.size() == 1) {
+			size += compute(j + 1, need[0]);
+		} else {
+			size += min(compute(j + 1, need[0]), compute(j + 1, need[1]));
+		}
+	}
+
+	return size;
+}
+
 void part2() {
 	uint64_t sum = 0;
 
@@ -277,13 +329,11 @@ void part2() {
 			}
 		}
 
-		for (int64_t i = 25; i > 0; --i) {
-			pos = getFullString(pos, i - 1);
+		uint64_t size = compute(0, pos);
 
-			cout << i << '\n';
-		}
-
-		sum += stoull(code) * pos.size();
+		// <vA<AA>>^AvAA<^A>Av<<A>>^AvA^A<vA>^A<Av<A>>^Av<<A>^A>AAvA^A<vA<A>>^Av<<A>A>^AAA<A>vA^AvA<^A>A
+		// <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
+		sum += stoull(code) * size;
 	}
 
 	cout << "Part 2:" << sum << endl;
