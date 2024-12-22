@@ -85,7 +85,7 @@ For all sequence, there may only be A+B and B+A
 */
 
 // Returns all shortest path from a to b
-vector<string> getSM(char ac, char bc) {
+vector<string> getMain(char ac, char bc) {
 	static unordered_map<char, vec2> ctop = {
 		{'A', {2, 3}}, {'0', {1, 3}}, {'1', {0, 2}}, {'2', {1, 2}}, {'3', {2, 2}}, {'4', {0, 1}},
 		{'5', {1, 1}}, {'6', {2, 1}}, {'7', {0, 0}}, {'8', {1, 0}}, {'9', {2, 0}}};
@@ -128,7 +128,7 @@ vector<string> getSM(char ac, char bc) {
 	return {A + B + "A", B + A + "A"};
 }
 
-vector<string> getSC(char ac, char bc) {
+vector<string> getRemote(char ac, char bc) {
 	static unordered_map<char, vec2> ctop = {
 		{'A', {2, 0}}, {'^', {1, 0}}, {'v', {1, 1}}, {'<', {0, 1}}, {'>', {2, 1}},
 	};
@@ -172,12 +172,35 @@ vector<string> getSC(char ac, char bc) {
 	return {A + B + "A", B + A + "A"};
 }
 
-string getShort(string a, string b) {
-	string posa = getSC('A', a[0])[0];
-	string posb = getSC('A', b[0])[0];
+string getShort(string a, string b, int j);
 
+string getFullString(string a, int j) {
+	string pos = "";
+
+	for (const auto step : ("A" + a) | views::slide(2)) {
+		const auto s = getRemote(step[0], step[1]);
+
+		if (s.size() == 1 || j == 0) {
+			pos += s[0];
+		} else {
+			pos += getShort(s[0], s[1], j - 1);
+		}
+	}
+
+	return pos;
+}
+
+string getShort(string a, string b, int j) {
+	string posa = getFullString(a, j);
+	string posb = getFullString(b, j);
+
+	// Break tie
 	if (posa.size() == posb.size()) {
-		if (getShort(posa, posb) == posa) {
+		if (j == 0) {
+			return b;
+		}
+
+		if (getShort(posa, posb, j - 1) == posa) {
 			return a;
 		} else {
 			return b;
@@ -186,9 +209,9 @@ string getShort(string a, string b) {
 
 	if (posa.size() < posb.size()) {
 		return a;
+	} else {
+		return b;
 	}
-
-	return b;
 }
 
 void part1() {
@@ -198,44 +221,26 @@ void part1() {
 		// Need to start from the end
 		string pos = "";
 		for (const auto step : ("A" + code) | views::slide(2)) {
-			const auto s = getSM(step[0], step[1]);
+			const auto s = getMain(step[0], step[1]);
 
 			if (s.size() == 1) {
 				pos += s[0];
 			} else {
-				pos += getShort(s[0], s[1]);
+				pos += getShort(s[0], s[1], 3);
 			}
 		}
 
-		string pos2;
-		for (const auto step : ("A" + pos) | views::slide(2)) {
-			const auto s = getSC(step[0], step[1]);
+		string pos2 = getFullString(pos, 1);
+		string pos3 = getFullString(pos2, 0);
 
-			if (s.size() == 1) {
-				pos2 += s[0];
-			} else {
-				pos2 += getShort(s[0], s[1]);
-			}
-		}
-
-		string pos3;
-		for (const auto step : ("A" + pos2) | views::slide(2)) {
-			const auto s = getSC(step[0], step[1]);
-
-			if (s.size() == 1) {
-				pos3 += s[0];
-			} else {
-				pos3 += getShort(s[0], s[1]);
-			}
-		}
-
-		cout << pos << '\n';
-		cout << pos2 << '\n';
 		cout << pos3 << '\n';
+		cout << pos2 << '\n';
+		cout << pos << '\n';
 
 		// auto out = getShort(rcode);
 
 		sum += stoull(code) * pos3.size();
+		cout << stoull(code) << " * " << pos3.size();
 		cout << '\n';
 	}
 
