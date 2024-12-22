@@ -172,9 +172,17 @@ vector<string> getRemote(char ac, char bc) {
 	return {A + B + "A", B + A + "A"};
 }
 
-string getShort(string a, string b, int j);
+string getShort(const string& a, const string& b, int j);
 
-string getFullString(string a, int j) {
+string getFullString(const string& a, int j) {
+	/*
+	static vector<unordered_map<string, string>> cache(27);
+
+	if (cache[j].contains(a)) {
+		return cache[j][a];
+	}
+	*/
+
 	string pos = "";
 
 	for (const auto step : ("A" + a) | views::slide(2)) {
@@ -187,10 +195,24 @@ string getFullString(string a, int j) {
 		}
 	}
 
+	// cache[j][a] = pos;
 	return pos;
 }
 
-string getShort(string a, string b, int j) {
+string getShortI(const string& a, const string& b, const int j);
+
+string getShort(const string& a, const string& b, const int j) {
+	static vector<unordered_map<string, string>> cache(27);
+
+	if (!cache[j].contains(a + "|" + b)) {
+		cache[j][a + "|" + b] = getShortI(a, b, j);
+	}
+
+	return cache[j][a + "|" + b];
+}
+
+// Implementation
+string getShortI(const string& a, const string& b, const int j) {
 	string posa = getFullString(a, j);
 	string posb = getFullString(b, j);
 
@@ -233,15 +255,7 @@ void part1() {
 		string pos2 = getFullString(pos, 1);
 		string pos3 = getFullString(pos2, 0);
 
-		cout << pos3 << '\n';
-		cout << pos2 << '\n';
-		cout << pos << '\n';
-
-		// auto out = getShort(rcode);
-
 		sum += stoull(code) * pos3.size();
-		cout << stoull(code) << " * " << pos3.size();
-		cout << '\n';
 	}
 
 	cout << "Part 1:" << sum << endl;
@@ -249,6 +263,28 @@ void part1() {
 
 void part2() {
 	uint64_t sum = 0;
+
+	for (const auto code : get()) {
+		// Need to start from the end
+		string pos = "";
+		for (const auto step : ("A" + code) | views::slide(2)) {
+			const auto s = getMain(step[0], step[1]);
+
+			if (s.size() == 1) {
+				pos += s[0];
+			} else {
+				pos += getShort(s[0], s[1], 26);
+			}
+		}
+
+		for (int64_t i = 25; i > 0; --i) {
+			pos = getFullString(pos, i - 1);
+
+			cout << i << '\n';
+		}
+
+		sum += stoull(code) * pos.size();
+	}
 
 	cout << "Part 2:" << sum << endl;
 }
