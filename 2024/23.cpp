@@ -5,15 +5,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <ranges>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#include "../vec2.hpp"
+#include "../algorithms.hpp"
 
 using namespace std;
 
@@ -30,8 +28,6 @@ vector<string> get() {
 }
 
 void part1() {
-	uint64_t sum = 0;
-
 	unordered_map<string, vector<string>> map;
 	unordered_set<string> chef;
 	for (const auto line : get()) {
@@ -71,8 +67,6 @@ void part1() {
 
 	cout << "Part 1:" << pairs.size() << endl;
 }
-
-#include "../algorithms.hpp"
 
 void part2() {
 	unordered_map<string, vector<string>> map;
