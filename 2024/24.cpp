@@ -2,7 +2,6 @@
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
-#include <deque>
 #include <fstream>
 #include <iostream>
 #include <ranges>
