@@ -2,11 +2,11 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<title>Advent of code solutions in C++</title>
 <style>
@@ -19,6 +19,7 @@ html, body {
 	min-width: 60em;
 	text-align: center;
 	height: 100%;
+	overflow: none;
 }
 
 h2 {
@@ -41,6 +42,7 @@ div#main {
 	text-align: center;
 	margin-top: 3%;
 	margin-bottom: 6%;
+	overflow: scroll;
 }
 
 div#flex {
@@ -155,7 +157,7 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { }
 			<p>Questions not included due to AOC creator's will (Don't wanna be a bitch as others were)</p>
 			<p>Please mainly rate the solutions, the website is a bonus :P (I know 0 html/js/css)</p>
 		<div id="flex">
-			<div id="select" class="half" style="margin-left: 5%; float: left; width: 40%;">
+			<div id="select" class="half" style="margin-left: 5%; float: left; width: 40%; margin-bottom: 7%;">
 				<button onClick="get('introduction.cpp')">Introduction</button>
 				<button onClick="get('algorithms.hpp')">Algorithms header</button>
 				<button onClick="get('vec2.hpp')">Vec2 support header</button>
@@ -221,7 +223,7 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { }
 				<button onClick="get('2022/07.cpp')">Day 7</button>
 			</div>
 			<div id="code" class="half" style="margin-left: 5%; margin-right: 7%; margin-bottom: 3%; text-align: left; hight: 100%; width: 55%;">
-				<pre class="prettyprint lang-cpp" id="code_pre" style="overflow: auto; height: 80%; white-space: pre; width: 100%; float: left;">int main() { 
+				<pre class="prettyprint lang-cpp" id="code_pre" style="overflow: scroll; height: 100%; white-space: pre; width: 100%; float: left;">int main() { 
 	std::cout &lt&lt "Loading advent code..." &lt&lt std::endl;
 }</pre>
 			</div>
