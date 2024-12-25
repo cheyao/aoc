@@ -6,9 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <ranges>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using namespace std;
