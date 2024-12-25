@@ -9,6 +9,8 @@ int main() {
 
 	std::println("- Modern C++ used");
 	std::println("- Every day runs under 0.5s");
+	std::println("- No external libraries");
+	std::println("- 37+ hours used!");
 	std::println("- Licensed under zlib");
 
 	std::println("PS. Please don't mind my html/css/js");
