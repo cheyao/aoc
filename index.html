@@ -65,6 +65,16 @@ li {
 	list-style-type: none;
 }
 
+button {
+	border: 0px;
+	background-color: transparent;
+	color: #ffff66;
+}
+
+button:hover {
+	text-shadow: 0 0 5px #ffff66, 0 0 10px #ffff66;
+}
+
 /* Pretty printing styles. Used with prettify.js. */
 /* Vim sunburst theme by David Leibovic */
 
@@ -91,9 +101,12 @@ pre.prettyprint {
 	font-family: "Fira Code", serif;
 	font-optical-sizing: auto;
 	font-weight: 300;
+	font-size: smaller;
 	font-style: normal;
 }
-
+ p {
+	font-size: smaller;
+ }
 
 /* Specify class=linenums on a pre to get line numbering */
 ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE; } /* IE indents via margin-left */
@@ -138,16 +151,74 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { }
 
 		<div id="body">
 		<div id="main">
-			<h2>-- Advent of Code Solutions in C++ --</h1>
+			<h2>-- Advent of Code Solutions in C++ --</h2>
+			<p>Questions not included due to AOC creator's will (Don't wanna be a bitch as others were)</p>
+			<p>Please mainly rate the solutions, the website is a bonus :P (I know 0 html/js/css)</p>
 		<div id="flex">
-			<div id="select" class="half" style="float: left; width: 40%;">
-				<ul>
-					<li>
-						<p>2024</p>
-						<button onClick="get('2024/01.cpp')">Day 1</button>
-						<button onClick="get('2024/02.cpp')">Day 2</button>
-					</li>
-				</ul>
+			<div id="select" class="half" style="margin-left: 5%; float: left; width: 40%;">
+				<button onClick="get('introduction.cpp')">Introduction</button>
+				<button onClick="get('algorithms.hpp')">Algorithms header</button>
+				<button onClick="get('vec2.hpp')">Vec2 support header</button>
+				<p>2024</p>
+				<button onClick="get('2024/01.cpp')">Day 1</button>
+				<button onClick="get('2024/02.cpp')">Day 2</button>
+				<button onClick="get('2024/03.cpp')">Day 3</button>
+				<button onClick="get('2024/04.cpp')">Day 4</button>
+				<button onClick="get('2024/05.cpp')">Day 5</button>
+				<button onClick="get('2024/06.cpp')">Day 6</button>
+				<button onClick="get('2024/07.cpp')">Day 7</button>
+				<button onClick="get('2024/08.cpp')">Day 8</button>
+				<button onClick="get('2024/09.cpp')">Day 9</button>
+				<button onClick="get('2024/10.cpp')">Day 10</button>
+				<button onClick="get('2024/11.cpp')">Day 11</button>
+				<button onClick="get('2024/12.cpp')">Day 12</button>
+				<button onClick="get('2024/13.cpp')">Day 13</button>
+				<button onClick="get('2024/14.cpp')">Day 14</button>
+				<button onClick="get('2024/15.cpp')">Day 15</button>
+				<button onClick="get('2024/16.cpp')">Day 16</button>
+				<button onClick="get('2024/17.cpp')">Day 17</button>
+				<button onClick="get('2024/18.cpp')">Day 18</button>
+				<button onClick="get('2024/19.cpp')">Day 19</button>
+				<button onClick="get('2024/20.cpp')">Day 20</button>
+				<button onClick="get('2024/21.cpp')">Day 21</button>
+				<button onClick="get('2024/22.cpp')">Day 22</button>
+				<button onClick="get('2024/23.cpp')">Day 23</button>
+				<button onClick="get('2024/24.cpp')">Day 24</button>
+				<button onClick="get('2024/25.cpp')">Day 25</button>
+				<p>2023</p>
+				<button onClick="get('2023/01.cpp')">Day 1</button>
+				<button onClick="get('2023/02.cpp')">Day 2</button>
+				<button onClick="get('2023/03.cpp')">Day 3</button>
+				<button onClick="get('2023/04.cpp')">Day 4</button>
+				<button onClick="get('2023/05.cpp')">Day 5</button>
+				<button onClick="get('2023/06.cpp')">Day 6</button>
+				<button onClick="get('2023/07.cpp')">Day 7</button>
+				<button onClick="get('2023/08.cpp')">Day 8</button>
+				<button onClick="get('2023/09.cpp')">Day 9</button>
+				<button onClick="get('2023/10.cpp')">Day 10</button>
+				<button onClick="get('2023/11.cpp')">Day 11</button>
+				<button onClick="get('2023/12.cpp')">Day 12</button>
+				<button onClick="get('2023/13.cpp')">Day 13</button>
+				<button onClick="get('2023/14.cpp')">Day 14</button>
+				<button onClick="get('2023/15.cpp')">Day 15</button>
+				<button onClick="get('2023/16.cpp')">Day 16</button>
+				<button onClick="get('2023/17.cpp')">Day 17</button>
+				<button onClick="get('2023/18.cpp')">Day 18</button>
+				<button onClick="get('2023/19.cpp')">Day 19</button>
+				<button onClick="get('2023/20.cpp')">Day 20</button>
+				<button onClick="get('2023/21.cpp')">Day 21</button>
+				<button onClick="get('2023/22.cpp')">Day 22</button>
+				<button onClick="get('2023/23.cpp')">Day 23</button>
+				<button onClick="get('2023/24.cpp')">Day 24</button>
+				<button onClick="get('2023/25.cpp')">Day 25</button>
+				<p>2022</p>
+				<button onClick="get('2022/01.cpp')">Day 1</button>
+				<button onClick="get('2022/02.cpp')">Day 2</button>
+				<button onClick="get('2022/03.cpp')">Day 3</button>
+				<button onClick="get('2022/04.cpp')">Day 4</button>
+				<button onClick="get('2022/05.cpp')">Day 5</button>
+				<button onClick="get('2022/06.cpp')">Day 6</button>
+				<button onClick="get('2022/07.cpp')">Day 7</button>
 			</div>
 			<div id="code" class="half" style="margin-left: 5%; margin-right: 7%; margin-bottom: 3%; text-align: left; hight: 100%; width: 55%;">
 				<pre class="prettyprint lang-cpp" id="code_pre" style="overflow: auto; height: 80%; white-space: pre; width: 100%; float: left;">int main() { 
