@@ -10,3 +10,5 @@
 
 ![](https://cloud-gtl8lxc1j-hack-club-bot.vercel.app/0image.png)
 
+See you in 2025!
+
