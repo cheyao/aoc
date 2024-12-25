@@ -3,6 +3,11 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
+
 		<title>Advent of code solutions in C++</title>
 <style>
 html, body {
@@ -16,6 +21,11 @@ html, body {
 	height: 100%;
 }
 
+h2 {
+	font-size: 1em;
+	font-weight: normal;
+}
+
 div#body {
 	display: flex;
 	justify-content: center;
@@ -23,18 +33,19 @@ div#body {
 	height: 100%;
 }
 
-h2 {
-	font-size: 1em;
-	font-weight: normal;
-}
-
 div#main {
 	border: 2px solid #115511;
-	margin-top: 20px;
 	text-decoration: none;
 	width: 66%;
-	height: 85%;
+	height: 90%;
 	text-align: center;
+	margin-top: 3%;
+	margin-bottom: 6%;
+}
+
+div#flex {
+	display: flex;
+	height: 100%
 }
 
 a {
@@ -46,15 +57,77 @@ a:hover, a:focus {
 	color: #99ff99;
 }
 
-.half {
-	width: 50%;
+.full {
 	height: 100%;
 }
 
 li {
 	list-style-type: none;
 }
+
+/* Pretty printing styles. Used with prettify.js. */
+/* Vim sunburst theme by David Leibovic */
+
+pre .str, code .str { color: #65B042; } /* string  - green */
+pre .kwd, code .kwd { color: #E28964; } /* keyword - dark pink */
+pre .com, code .com { color: #AEAEAE; font-style: italic; } /* comment - gray */
+pre .typ, code .typ { color: #89bdff; } /* type - light blue */
+pre .lit, code .lit { color: #3387CC; } /* literal - blue */
+pre .pun, code .pun { color: #fff; } /* punctuation - white */
+pre .pln, code .pln { color: #fff; } /* plaintext - white */
+pre .tag, code .tag { color: #89bdff; } /* html/xml tag    - light blue */
+pre .atn, code .atn { color: #bdb76b; } /* html/xml attribute name  - khaki */
+pre .atv, code .atv { color: #65B042; } /* html/xml attribute value - green */
+pre .dec, code .dec { color: #3387CC; } /* decimal - blue */
+
+pre.prettyprint, code.prettyprint {
+	background-color: #000;
+}
+
+pre.prettyprint {
+	width: 95%;
+	margin: 1em auto;
+	padding: 1em;
+	font-family: "Fira Code", serif;
+	font-optical-sizing: auto;
+	font-weight: 300;
+	font-style: normal;
+}
+
+
+/* Specify class=linenums on a pre to get line numbering */
+ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE; } /* IE indents via margin-left */
+li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8 { list-style-type: none }
+/* Alternate shading for lines */
+li.L1,li.L3,li.L5,li.L7,li.L9 { }
+
+@media print {
+  pre .str, code .str { color: #060; }
+  pre .kwd, code .kwd { color: #006; font-weight: bold; }
+  pre .com, code .com { color: #600; font-style: italic; }
+  pre .typ, code .typ { color: #404; font-weight: bold; }
+  pre .lit, code .lit { color: #044; }
+  pre .pun, code .pun { color: #440; }
+  pre .pln, code .pln { color: #000; }
+  pre .tag, code .tag { color: #006; font-weight: bold; }
+  pre .atn, code .atn { color: #404; }
+  pre .atv, code .atv { color: #060; }
+}
 </style>
+<script>
+	function get(url) {
+		fetch("/static/aoc/" + url)
+			.then((res) => res.text())
+			.then((text) => {
+				document.getElementById("code_pre").classList.remove("prettyprinted");
+				document.getElementById("code_pre").innerText = text;
+				PR.prettyPrint();
+			})
+			.catch((e) => console.error(e));
+	}
+
+	get("introduction.cpp");
+</script>
 	</head>
 	<body>
 		<!-- Nav bar -->
@@ -66,16 +139,22 @@ li {
 		<div id="body">
 		<div id="main">
 			<h2>-- Advent of Code Solutions in C++ --</h1>
-			<div id="select" class="half" style="float: left;">
+		<div id="flex">
+			<div id="select" class="half" style="float: left; width: 40%;">
 				<ul>
 					<li>
 						<p>2024</p>
-						<button onClick="alert('Button 1')">Button 1</button>
+						<button onClick="get('2024/01.cpp')">Day 1</button>
+						<button onClick="get('2024/02.cpp')">Day 2</button>
 					</li>
 				</ul>
 			</div>
-			<div id="code" class="half" style="float: right;">
+			<div id="code" class="half" style="margin-left: 5%; margin-right: 7%; margin-bottom: 3%; text-align: left; hight: 100%; width: 55%;">
+				<pre class="prettyprint lang-cpp" id="code_pre" style="overflow: auto; height: 80%; white-space: pre; width: 100%; float: left;">int main() { 
+	std::cout &lt&lt "Loading advent code..." &lt&lt std::endl;
+}</pre>
 			</div>
+		</div>
 		</div>
 		</div>
 	</body>
