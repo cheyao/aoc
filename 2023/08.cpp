@@ -155,6 +155,8 @@ void part2() {
 }
 
 int main() {
+    // Execute both parts
 	part1();
 	part2();
 }
+

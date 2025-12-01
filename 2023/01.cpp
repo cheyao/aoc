@@ -37,12 +37,11 @@ void part1() {
 
 	input.close();
 
-	std::cout << "[Part 1] The sum of all of the calibration values is: "
-		  << sum << std::endl;
+	std::cout << "[Part 1] The sum of all of the calibration values is: " << sum << std::endl;
 }
 
-const std::string numbers[] = {"",     "one", "two",   "three", "four",
-			       "five", "six", "seven", "eight", "nine"};
+const std::string numbers[] = {"", "one", "two", "three", "four",
+			                   "five", "six", "seven", "eight", "nine"};
 
 int getDigit(std::string line) {
 	int sum = 0;
@@ -111,8 +110,7 @@ void part2() {
 
 	input.close();
 
-	std::cout << "[Part 2] The sum of all of the calibration values is: "
-		  << sum << std::endl;
+	std::cout << "[Part 2] The sum of all of the calibration values is: " << sum << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -121,3 +119,4 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
+
