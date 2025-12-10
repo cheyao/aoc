@@ -84,27 +84,45 @@ bool contains(const auto& compressedX, const auto& compressedY, const uint64_t x
 auto part2() {
 	uint64_t sum = 0;
 
-	uint64_t max_x = 0;
-	uint64_t max_y = 0;
-	uint64_t min_x = 999999999999;
-	uint64_t min_y = 999999999999;
-
 	vector<vec2> tiles;
 	for (const auto& l : get()) {
 		const auto c = l | views::split(',') |
 					   views::transform([](const auto& s) { return atoll(s.data()); }) |
 					   ranges::to<vector<uint64_t>>();
 		tiles.emplace_back(c[0], c[1]);
-
-		max_x = max(max_x, c[0]);
-		max_y = max(max_y, c[1]);
 	}
 
-	vector<vector<char>> map(max_y + 1, vector<char>(max_x + 1, '.'));
+	// X Mapping
+	map<uint64_t, uint64_t> xmap;
+	ranges::sort(tiles, {}, &vec2::first);
+	uint64_t i = 0;
+	for (const auto& t : tiles) {
+		if (!xmap.contains(t.first)) {
+
+			xmap[t.first] = i;
+			++i;
+		}
+	}
+	// Y Mapping
+	map<uint64_t, uint64_t> ymap;
+	ranges::sort(tiles, {}, &vec2::second);
+	i = 0;
+	for (const auto& t : tiles) {
+		if (!ymap.contains(t.second)) {
+			ymap[t.second] = i;
+			++i;
+		}
+	}
+
+	vector<string> map(ymap.size() + 1, string(xmap.size() + 1, '.'));
+	vector<vec2> mappedTiles;
+	for (const auto& t : tiles) {
+		mappedTiles.emplace_back(xmap[t.first], ymap[t.second]);
+	}
 
 	vector<rect> rects;
 	for (uint64_t i = 0; i < tiles.size(); ++i) {
-		map[tiles[i].second][tiles[i].first] = '#';
+		map[mappedTiles[i].second][mappedTiles[i].first] = '#';
 
 		for (uint64_t j = 0; j < i; ++j) {
 			const auto diff = tiles[i] - tiles[j];
@@ -113,12 +131,9 @@ auto part2() {
 		}
 	}
 
-	std::map<uint64_t, vector<pair<uint64_t, uint64_t>>> compressedY;
-	std::map<uint64_t, vector<pair<uint64_t, uint64_t>>> compressedX;
-
 	ranges::sort(rects, ranges::greater(), &rect::size);
 	{
-		vector<vec2> tilesd = tiles;
+		vector<vec2> tilesd = mappedTiles;
 		ranges::sort(tilesd, {}, &vec2::second);
 
 		vector<vec2> line;
@@ -131,7 +146,10 @@ auto part2() {
 				for (const auto elem : line | views::slide(2)) {
 					uint64_t xmin = min(elem[0].first, elem[1].first);
 					uint64_t xmax = max(elem[0].first, elem[1].first);
-					compressedY[y].emplace_back(xmin, xmax);
+
+					for (uint64_t x = xmin; x <= xmax; ++x) {
+						map[y][x] = '$';
+					}
 				}
 
 				y = t.second;
@@ -140,17 +158,20 @@ auto part2() {
 
 			line.emplace_back(t);
 		}
+
 		ranges::sort(line, {}, &vec2::first);
 		for (const auto elem : line | views::slide(2)) {
 			uint64_t xmin = min(elem[0].first, elem[1].first);
 			uint64_t xmax = max(elem[0].first, elem[1].first);
-			compressedY[y].emplace_back(xmin, xmax);
+
+			for (uint64_t x = xmin; x <= xmax; ++x) {
+				map[y][x] = '$';
+			}
 		}
 
-		// For X!
+		// Now on X side
 		ranges::sort(tilesd, {}, &vec2::first);
 		line.clear();
-
 		uint64_t x = 0;
 		for (const auto t : tilesd) {
 			if (t.first != x) {
@@ -160,7 +181,11 @@ auto part2() {
 				for (const auto elem : line | views::slide(2)) {
 					uint64_t ymin = min(elem[0].second, elem[1].second);
 					uint64_t ymax = max(elem[0].second, elem[1].second);
-					compressedX[x].emplace_back(ymin, ymax);
+
+					for (uint64_t y = ymin; y <= ymax; ++y) {
+
+						map[y][x] = '$';
+					}
 				}
 
 				x = t.first;
@@ -169,18 +194,62 @@ auto part2() {
 
 			line.emplace_back(t);
 		}
+
 		ranges::sort(line, {}, &vec2::second);
 		for (const auto elem : line | views::slide(2)) {
 			uint64_t ymin = min(elem[0].second, elem[1].second);
 			uint64_t ymax = max(elem[0].second, elem[1].second);
-			compressedX[x].emplace_back(ymin, ymax);
+
+			for (uint64_t y = ymin; y <= ymax; ++y) {
+
+				map[y][x] = '$';
+			}
 		}
+	}
+
+	// Get a point inside
+	vec2 point = make_pair(0, 0);
+	bool inside = false;
+	for (uint64_t x = 0; x <= xmap.size(); ++x) {
+		if (map[ymap.size() / 2][x] != '.') {
+			inside = true;
+			continue;
+		}
+
+		if (inside) {
+			point = make_pair(x, ymap.size() / 2);
+			break;
+		}
+	}
+
+	// Fill!
+	queue<vec2> q;
+	q.emplace(point);
+	while (!q.empty()) {
+		const auto c = q.front();
+		q.pop();
+
+		if (map[c.second][c.first] != '.') {
+			continue;
+		}
+
+		map[c.second][c.first] = '#';
+
+		auto l = [&](const auto& c) {
+			if (valid(map, c)) {
+				q.emplace(c);
+			}
+		};
+		l(c + UP);
+		l(c + DOWN);
+		l(c + LEFT);
+		l(c + RIGHT);
 	}
 
 	// Check if is inside
 	for (const auto rect : rects) {
-		const auto a = tiles[rect.a];
-		const auto b = tiles[rect.b];
+		const auto a = mappedTiles[rect.a];
+		const auto b = mappedTiles[rect.b];
 
 		uint64_t min_x = min(a.first, b.first);
 		uint64_t min_y = min(a.second, b.second);
@@ -188,16 +257,16 @@ auto part2() {
 		uint64_t max_y = max(a.second, b.second);
 
 		bool ok = true;
+
 		for (uint64_t x = min_x; x <= max_x; ++x) {
-			if (!contains(compressedX, compressedY, x, max_y) ||
-				!contains(compressedX, compressedY, x, min_y)) {
+			if (map[max_y][x] == '.' || map[min_y][x] == '.') {
 				ok = false;
 				break;
 			}
 		}
+
 		for (uint64_t y = min_y; y <= max_y; ++y) {
-			if (!contains(compressedX, compressedY, max_x, y) ||
-				!contains(compressedX, compressedY, min_x, y)) {
+			if (map[y][max_x] == '.' || map[y][min_x] == '.') {
 				ok = false;
 				break;
 			}
@@ -205,6 +274,7 @@ auto part2() {
 
 		if (ok) {
 			sum = rect.size;
+
 			break;
 		}
 	}
