@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-using vec2 = std::pair<int32_t, int32_t>;
+using vec2 = std::pair<int64_t, int64_t>;
 
 template <typename T, typename U>
 std::pair<T, U> operator+=(std::pair<T, U>& l, const std::pair<T, U>& r) noexcept {
